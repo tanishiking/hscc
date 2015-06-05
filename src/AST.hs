@@ -1,22 +1,24 @@
 module AST where
 
-data Program = [ExternalDeclaration] deriving (Show)
-data Identifier = String deriving (Show)
+type Program = [ExternalDeclaration]
+type Identifier = String
 
-data ExternalDeclaration = Decl     Declaration
+data ExternalDeclaration = Decl     DeclaratorList
                          | FuncProt FunctionPrototype
                          | FuncDef  FunctionDefinition
                          deriving (Show)
 
-data Declaration = Type DeclaratorList deriving (Show)
+type DeclaratorList = [(Type, DirectDeclarator)]
 
-data DeclaratorList = [Declarator] deriving (Show)
-
-data Declarator = Variable Identifier
-                | Sequence Identifier Integer
-                deriving (Show)
+data DirectDeclarator = Variable Identifier
+                      | Sequence Identifier Integer
+                      deriving (Show)
 
 -- === Data FunctionPrototype === 
+type FunctionPrototype  = String
+type FunctionDefinition = String
+
+
 -- === Function Definition===
 
 
@@ -34,5 +36,7 @@ data Stmt = EmptyStmt
           | ReturnStmt   Stmt
           deriving (Show)
 
-data Expr = 
 
+data Expr = Constant  Integer
+          | IdentExpr Identifier
+          deriving (Show)

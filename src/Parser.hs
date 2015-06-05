@@ -12,9 +12,9 @@ import Text.Parsec.Language (javaStyle)
 import AST
 
 smallCStyle = javaStyle
-            { Token.nestedComments = False
-            , Token.reservedNames = ["if", "else", "while", "return", "int", "void"]
-            , Token.reservedOpNames = []
+            { P.nestedComments = False
+            , P.reservedNames = ["if", "else", "while", "return", "int", "void"]
+            , P.reservedOpNames = []
             }
 
 lexer :: P.TokenParser()
@@ -31,6 +31,9 @@ symbol = P.symbol lexer
 
 natural :: Parser Integer
 natural = P.natural lexer
+
+identifier :: Parser String
+identifier = P.identifier lexer
 
 semi :: Parser String
 semi = P.semi lexer
@@ -54,7 +57,7 @@ brackets = P.brackets lexer
 parseProgram :: Parser Program
 parseProgram = do
   (P.whiteSpace lexer)
-  x <- many ExternalDeclaration
+  x <- many externalDeclaration
   return x
   <?> "parseProgram"
 
@@ -62,39 +65,69 @@ parseProgram = do
 externalDeclaration :: Parser ExternalDeclaration
 externalDeclaration =
   try (do 
-    x <- declarationList
+    x <- declaration
     return x)
+{-
   <|> do x <- functionPrototype
       return x
   <|> do x <- functionDefinition
       return x
+-}
   <?> "parseExternalDeclaration"
 
 
-declaration :: Parser Declaration
+declaration :: Parser ExternalDeclaration
 declaration = do
-  t <- typeSpecifier
-  d <- declarationList
+  d <- declaratorList
   _ <- semi
-  return d
+  return (Decl d)
   <?> "declaration"
 
 
-declarationList :: Parser DeclarationList
-declarationList = do
+checkPointer :: String -> Type -> Type
+checkPointer p t = 
+  if p == "*" then CPointer t else t 
+
+{- 
+ - int a, * b, c
+ - (CInt a), (CPointer CInt b), (CInt c)
+-}
+
+genDecl :: Type -> [(String, DirectDeclarator)] -> DeclaratorList
+genDecl t str_decl = foldr f [] str_decl
+  where f (p, direct) acc = (checkPointer p t, direct):acc
+
+
+declaratorList :: Parser DeclaratorList
+declaratorList = do
+  t <- typeSpecifier
   x <- sepBy declarator $ symbol ","
-  return x
-  <?> "declaration list"
+  return (genDecl t x)
+  <?> "declarator list"
 
 
-declarator :: Parser Declarator
-declarator =
-  try (do
-    
-    )
-
-  
+pointer :: Parser String
+pointer = option "" $ symbol "*"
 
 
+declarator :: Parser (String, DirectDeclarator)
+declarator = do
+  p    <- pointer
+  decl <- directDecl
+  return (p, decl)
+  <?> "declarator"
 
 
+directDecl :: Parser DirectDeclarator
+directDecl = try ( do
+    name <- identifier
+    size <- brackets natural
+    return $ Sequence name size )
+  <|> ( do
+    name <- identifier
+    return $ Variable name)
+
+
+typeSpecifier :: Parser Type
+typeSpecifier =  (symbol "int"  >> return CInt)
+             <|> (symbol "void" >> return CVoid)
