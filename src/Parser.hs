@@ -63,16 +63,12 @@ parseProgram = do
 
 
 externalDeclaration :: Parser ExternalDeclaration
-externalDeclaration =
-  try (do 
+externalDeclaration = try (do 
     x <- declaration
     return x)
-{-
-  <|> do x <- functionPrototype
-      return x
-  <|> do x <- functionDefinition
-      return x
--}
+  <|> ( do 
+    x <- functionPrototype
+    return $ FuncProt x)
   <?> "parseExternalDeclaration"
 
 
@@ -80,7 +76,7 @@ declaration :: Parser ExternalDeclaration
 declaration = do
   d <- declaratorList
   _ <- semi
-  return (Decl d)
+  return $ Decl d
   <?> "declaration"
 
 
@@ -89,8 +85,10 @@ checkPointer p t =
   if p == "*" then CPointer t else t 
 
 {- 
+ - =====================================
  - int a, * b, c
  - (CInt a), (CPointer CInt b), (CInt c)
+ - =====================================
 -}
 
 genDecl :: Type -> [(String, DirectDeclarator)] -> DeclaratorList
@@ -131,3 +129,69 @@ directDecl = try ( do
 typeSpecifier :: Parser Type
 typeSpecifier =  (symbol "int"  >> return CInt)
              <|> (symbol "void" >> return CVoid)
+
+{-
+ - ========================
+ -    Function Prototype
+ - ========================
+ -}
+
+functionPrototype :: Parser FunctionPrototype
+functionPrototype = do
+  t                  <- typeSpecifier
+  (p, fname, params) <- funcDeclarator <* semi
+  return $ FunctionPrototype (checkPointer p t) fname params
+
+
+-- String '*', Identifier functionName,
+funcDeclarator :: Parser (String, Identifier, [(Type, Identifier)])
+funcDeclarator = do
+  p      <- pointer
+  fname  <- identifier
+  params <- parens $ paramDeclaration `sepBy` (symbol ",")
+  return $ (p, fname, params)
+
+
+paramDeclaration :: Parser (Type, Identifier)
+paramDeclaration = do
+  t    <- typeSpecifier
+  p    <- pointer
+  name <- identifier
+  return $ (checkPointer p t, name)
+
+{-
+ - ========================
+ -   Function Definition
+ - ========================
+
+functionDef :: Parser FunctionDefinition
+functionDef = do
+  t                  <- typeSpecifier
+  (p, fname, params) <- funcDeclarator
+  stmts              <- 
+-}
+
+
+
+
+
+
+
+{-
+ - =========================
+ -  build expression parser
+ - =========================
+
+table :: [[Operator String () Identity Expr]]
+table = [map op_prefix ["-", "&", "*"],
+         map op_infix  ["*", "/"],
+         map op_infix  ["+", "-"],
+         map op_infix  ["<=", "<", ">", ">="],
+         map op_infix  ["==", "!="],
+         map op_infix  ["&&"],
+         map op_infix  ["||"]]
+      where
+        op_func f s = do { return $ f s }
+        op_prefix s = Prefix (op_func UnaryPrim s)
+        op_infix  s = Infix  (op_func BinaryPrim s) AssocLeft
+-}

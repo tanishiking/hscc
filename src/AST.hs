@@ -14,12 +14,16 @@ data DirectDeclarator = Variable Identifier
                       | Sequence Identifier Integer
                       deriving (Show)
 
--- === Data FunctionPrototype === 
-type FunctionPrototype  = String
-type FunctionDefinition = String
-
-
--- === Function Definition===
+{-
+ - 
+ - ========================
+ -  Data FunctionPrototype  
+ - ========================
+-}
+data FunctionPrototype  = FunctionPrototype Type Identifier [(Type, Identifier)]
+                        deriving (Show)
+data FunctionDefinition = FunctionDefinition Type Identifier [(Type, Identifier)] [Stmt]
+                        deriving (Show)
 
 
 data Type = CInt
@@ -29,14 +33,19 @@ data Type = CInt
 
 data Stmt = EmptyStmt
           | ExprStmt     Expr
-          | CompoundStmt [Expr]
+          | CompoundStmt [Stmt]
           | IfStmt       Expr Stmt Stmt
           | WhileStmt    Expr Stmt
           | ForStmt      Expr Expr Expr Stmt
           | ReturnStmt   Stmt
           deriving (Show)
 
-
-data Expr = Constant  Integer
-          | IdentExpr Identifier
+data Expr = AssignExpr  Expr   Expr
+          | UnaryPrim   String Expr
+          | BinaryPrim  String Expr Expr
+          | ArrayAccess Expr   Expr
+          | ApplyFunc   String [Expr]
+          | MultiExpr   [Expr]
+          | Constant    Integer
+          | IdentExpr   Identifier
           deriving (Show)
