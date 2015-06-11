@@ -4,8 +4,10 @@ module Parser where
 import Control.Monad
 
 import Text.Parsec
+import Text.Parsec.Expr
 import Text.Parsec.String(Parser)
 import Control.Monad
+import Control.Monad.Identity(Identity)
 import qualified Text.Parsec.Token as P
 import Text.Parsec.Language (javaStyle)
 
@@ -41,6 +43,9 @@ semi = P.semi lexer
 comma :: Parser String
 comma = P.comma lexer
 
+reservedOp :: String -> Parser ()
+reservedOp = P.reservedOp lexer
+
 parens :: forall a. Parser a -> Parser a
 parens = P.parens lexer
 
@@ -63,13 +68,13 @@ parseProgram = do
 
 
 externalDeclaration :: Parser ExternalDeclaration
-externalDeclaration = try (do 
-    x <- declaration
-    return x)
-  <|> ( do 
-    x <- functionPrototype
-    return $ FuncProt x)
-  <?> "parseExternalDeclaration"
+externalDeclaration = try (do x <- declaration
+                              return x)
+                      <|> ( do x <- functionPrototype
+                               return $ FuncProt x)
+                      <|> ( do x <- functionDef
+                               return $ FuncDef x)
+                      <?> "parseExternalDeclaration"
 
 
 declaration :: Parser ExternalDeclaration
@@ -117,18 +122,18 @@ declarator = do
 
 
 directDecl :: Parser DirectDeclarator
-directDecl = try ( do
-    name <- identifier
-    size <- brackets natural
-    return $ Sequence name size )
-  <|> ( do
-    name <- identifier
-    return $ Variable name)
+directDecl = try ( do name <- identifier
+                      size <- brackets natural
+                      return $ Sequence name size )
+             <|> ( do name <- identifier
+                      return $ Variable name)
+             <?> "directDeclarator"
 
 
 typeSpecifier :: Parser Type
 typeSpecifier =  (symbol "int"  >> return CInt)
              <|> (symbol "void" >> return CVoid)
+             <?> "typeSpecifier"
 
 {-
  - ========================
@@ -141,6 +146,7 @@ functionPrototype = do
   t                  <- typeSpecifier
   (p, fname, params) <- funcDeclarator <* semi
   return $ FunctionPrototype (checkPointer p t) fname params
+  <?> "FunctionPrototype"
 
 
 -- String '*', Identifier functionName,
@@ -150,6 +156,7 @@ funcDeclarator = do
   fname  <- identifier
   params <- parens $ paramDeclaration `sepBy` (symbol ",")
   return $ (p, fname, params)
+  <?> "functionDeclarator"
 
 
 paramDeclaration :: Parser (Type, Identifier)
@@ -158,40 +165,152 @@ paramDeclaration = do
   p    <- pointer
   name <- identifier
   return $ (checkPointer p t, name)
+  <?> "paramDeclaration"
 
-{-
- - ========================
- -   Function Definition
- - ========================
 
 functionDef :: Parser FunctionDefinition
 functionDef = do
   t                  <- typeSpecifier
   (p, fname, params) <- funcDeclarator
-  stmts              <- 
--}
+  stmts              <- compoundStmt
+  return $ FunctionDefinition (checkPointer p t) fname params stmts
+  <?> "functionDefinition"
+
+{-
+ -  ===================
+ -       Statement
+ -  ===================
+ -} 
+
+compoundStmt :: Parser CompoundStatement
+compoundStmt = braces ( do
+  declList <- declarationList
+  stmtList <- statementList
+  return $ CompoundStatement declList stmtList)
+  <?> "compound statement"
 
 
+declarationList :: Parser DeclarationList
+declarationList = do
+  declarators <- declaratorList
+  return $ DeclarationList declarators
+  <?> "declarationList"
 
 
+statementList :: Parser StatementList
+statementList = do
+  stmts <- many (try stmt)
+  return $ StatementList stmts
+  <?> "statementList"
+  
 
+stmt :: Parser Stmt
+stmt =  try (semi >> return EmptyStmt)
+    <|> try (do e <- expr <* semi
+                return $ ExprStmt e)
+    <|> try (do stmts <- compoundStmt
+                return $ CompoundStmt stmts)
+    <|> try (do symbol "if"
+                e  <- parens expr
+                s  <- stmt
+                return $ IfStmt e s (EmptyStmt))
+    <|> try (do e  <- symbol "if"   >> parens expr
+                s1 <- stmt
+                s2 <- symbol "else" >> stmt
+                return $ IfStmt e s1 s2)
+    <|> try (do e <- symbol "while" >> expr
+                s <- stmt
+                return $ WhileStmt e s)
+    <|> try (do symbol "for"
+                symbol "("
+                dec    <- expr <* semi
+                cond   <- expr <* semi
+                update <- expr <* symbol ")"
+                s      <- stmt
+                return $ ForStmt dec cond update s)
+    <|> try (do symbol "return"
+                s <- stmt <* semi
+                return $ ReturnStmt s)
+    <?> "statement"
+
+
+{-
+ - =========================
+ -          expr
+ - =========================
+ -}
+
+expr :: Parser Expr
+expr = ExprList <$> assignExpr `sepBy` comma
+      <?> "expression"
+
+assignExpr :: Parser Expr
+assignExpr = try ( do 
+    ident <- identifier
+    symbol "="
+    assign <- assignExpr
+    return $ AssignExpr ident assign)
+  <|> logicalOrExpr
+  <?> "assignExpr"
+
+logicalOrExpr :: Parser Expr
+logicalOrExpr =  buildExpressionParser table unaryExpr
+             <?> "logicalOrExpr"
 
 
 {-
  - =========================
  -  build expression parser
  - =========================
+ -}
 
 table :: [[Operator String () Identity Expr]]
-table = [map op_prefix ["-", "&", "*"],
-         map op_infix  ["*", "/"],
-         map op_infix  ["+", "-"],
-         map op_infix  ["<=", "<", ">", ">="],
-         map op_infix  ["==", "!="],
-         map op_infix  ["&&"],
-         map op_infix  ["||"]]
-      where
-        op_func f s = do { return $ f s }
-        op_prefix s = Prefix (op_func UnaryPrim s)
-        op_infix  s = Infix  (op_func BinaryPrim s) AssocLeft
--}
+table = [[op "*" Multiple, op "/" Devide]
+        ,[op "+" Plus,     op "-" Minus]
+        ,[op "<" Lt,       op ">" Gt,
+          op "<=" Lte,     op ">=" Gte]
+        ,[op "==" Equal,   op "!=" NotEqual]
+        ,[op "&&" And]
+        ,[op "||" Or]]
+  where op s f = Infix( do
+                    reservedOp s
+                    return f
+                    <?> "unary expr")
+                  AssocLeft
+
+
+unaryExpr :: Parser Expr
+unaryExpr =  try postFixExpr
+         <|> ( do symbol "-"
+                  p <- unaryExpr
+                  return $ UnaryMinus p)
+         <|> ( do symbol "&"
+                  p <- unaryExpr
+                  return $ UnaryAddress p)
+         <|> ( do symbol "*"
+                  p <- unaryExpr
+                  return $ UnaryPointer p)
+         <?> "unaryExpr"
+
+
+postFixExpr :: Parser Expr
+postFixExpr = try (do fname <- identifier
+                      args  <- argExprList
+                      return $ CallFunc fname args)
+          <|> try (do array    <- expr
+                      accessor <- (brackets expr)
+                      return $ ArrayAccess array accessor)
+          <|> primaryExpr
+          <?> "postFixExpr"
+
+
+argExprList :: Parser [Expr]
+argExprList = try (assignExpr `sepBy` comma)
+          <?> "expression"
+
+primaryExpr :: Parser Expr
+primaryExpr =  try (parens expr)
+           <|> liftM Constant natural
+           <|> liftM IdentExpr identifier
+           <?> "primaryExpr"
+

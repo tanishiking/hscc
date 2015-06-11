@@ -15,14 +15,13 @@ data DirectDeclarator = Variable Identifier
                       deriving (Show)
 
 {-
- - 
  - ========================
  -  Data FunctionPrototype  
  - ========================
 -}
 data FunctionPrototype  = FunctionPrototype Type Identifier [(Type, Identifier)]
                         deriving (Show)
-data FunctionDefinition = FunctionDefinition Type Identifier [(Type, Identifier)] [Stmt]
+data FunctionDefinition = FunctionDefinition Type Identifier [(Type, Identifier)] CompoundStatement
                         deriving (Show)
 
 
@@ -33,19 +32,42 @@ data Type = CInt
 
 data Stmt = EmptyStmt
           | ExprStmt     Expr
-          | CompoundStmt [Stmt]
+          | CompoundStmt CompoundStatement
           | IfStmt       Expr Stmt Stmt
           | WhileStmt    Expr Stmt
           | ForStmt      Expr Expr Expr Stmt
           | ReturnStmt   Stmt
           deriving (Show)
 
-data Expr = AssignExpr  Expr   Expr
-          | UnaryPrim   String Expr
-          | BinaryPrim  String Expr Expr
-          | ArrayAccess Expr   Expr
-          | ApplyFunc   String [Expr]
-          | MultiExpr   [Expr]
-          | Constant    Integer
-          | IdentExpr   Identifier
+
+data CompoundStatement = CompoundStatement DeclarationList StatementList
+                       deriving (Show)
+
+data DeclarationList = DeclarationList DeclaratorList
+                     deriving (Show)
+
+data StatementList = StatementList [Stmt]
+                   deriving (Show)
+
+data Expr = AssignExpr   Identifier Expr
+          | Or           Expr       Expr 
+          | And          Expr       Expr
+          | Equal        Expr       Expr
+          | NotEqual     Expr       Expr
+          | Lt           Expr       Expr
+          | Gt           Expr       Expr
+          | Lte          Expr       Expr 
+          | Gte          Expr       Expr
+          | Plus         Expr       Expr
+          | Minus        Expr       Expr
+          | Multiple     Expr       Expr
+          | Devide       Expr       Expr
+          | UnaryMinus   Expr
+          | UnaryAddress Expr   
+          | UnaryPointer Expr
+          | CallFunc     String    [Expr]
+          | ArrayAccess  Expr       Expr
+          | ExprList    [Expr]
+          | Constant     Integer
+          | IdentExpr    Identifier
           deriving (Show)
