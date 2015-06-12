@@ -1,17 +1,19 @@
 module AST where
 
+import Text.Parsec
+
 type Program = [ExternalDeclaration]
 type Identifier = String
 
-data ExternalDeclaration = Decl     DeclaratorList
-                         | FuncProt FunctionPrototype
-                         | FuncDef  FunctionDefinition
+data ExternalDeclaration = Decl     SourcePos DeclaratorList
+                         | FuncProt SourcePos FunctionPrototype
+                         | FuncDef  SourcePos FunctionDefinition
                          deriving (Show)
 
 type DeclaratorList = [(Type, DirectDeclarator)]
 
-data DirectDeclarator = Variable Identifier
-                      | Sequence Identifier Integer
+data DirectDeclarator = Variable SourcePos Identifier
+                      | Sequence SourcePos Identifier Integer
                       deriving (Show)
 
 {-
@@ -19,9 +21,9 @@ data DirectDeclarator = Variable Identifier
  -  Data FunctionPrototype  
  - ========================
 -}
-data FunctionPrototype  = FunctionPrototype Type Identifier [(Type, Identifier)]
+data FunctionPrototype  = FunctionPrototype SourcePos Type Identifier [(Type, Identifier)]
                         deriving (Show)
-data FunctionDefinition = FunctionDefinition Type Identifier [(Type, Identifier)] CompoundStatement
+data FunctionDefinition = FunctionDefinition SourcePos Type Identifier [(Type, Identifier)] CompoundStatement
                         deriving (Show)
 
 
@@ -30,41 +32,41 @@ data Type = CInt
           | CPointer Type
           deriving(Show)
 
-data Stmt = EmptyStmt
-          | ExprStmt     Expr
-          | CompoundStmt CompoundStatement
-          | IfStmt       Expr Stmt Stmt
-          | WhileStmt    Expr Stmt
-          | ForStmt      Expr Expr Expr Stmt
-          | ReturnStmt   Expr
+data Stmt = EmptyStmt    SourcePos
+          | ExprStmt     SourcePos Expr
+          | CompoundStmt SourcePos CompoundStatement
+          | IfStmt       SourcePos Expr Stmt Stmt
+          | WhileStmt    SourcePos Expr Stmt
+          | ForStmt      SourcePos Expr Expr Expr Stmt
+          | ReturnStmt   SourcePos Expr
           deriving (Show)
 
 
-data CompoundStatement = CompoundStatement DeclarationList [Stmt]
+data CompoundStatement = CompoundStatement SourcePos DeclarationList [Stmt]
                        deriving (Show)
 
-data DeclarationList = DeclarationList [DeclaratorList]
+data DeclarationList = DeclarationList SourcePos [DeclaratorList]
                      deriving (Show)
 
-data Expr = AssignExpr   Expr       Expr
-          | Or           Expr       Expr 
-          | And          Expr       Expr
-          | Equal        Expr       Expr
-          | NotEqual     Expr       Expr
-          | Lt           Expr       Expr
-          | Gt           Expr       Expr
-          | Lte          Expr       Expr 
-          | Gte          Expr       Expr
-          | Plus         Expr       Expr
-          | Minus        Expr       Expr
-          | Multiple     Expr       Expr
-          | Devide       Expr       Expr
-          | UnaryMinus   Expr
-          | UnaryAddress Expr   
-          | UnaryPointer Expr
-          | CallFunc     String    [Expr]
-          | ArrayAccess  Expr       Expr
-          | ExprList    [Expr]
-          | Constant     Integer
-          | IdentExpr    Identifier
+data Expr = AssignExpr   SourcePos Expr       Expr
+          | Or           SourcePos Expr       Expr 
+          | And          SourcePos Expr       Expr
+          | Equal        SourcePos Expr       Expr
+          | NotEqual     SourcePos Expr       Expr
+          | Lt           SourcePos Expr       Expr
+          | Gt           SourcePos Expr       Expr
+          | Lte          SourcePos Expr       Expr 
+          | Gte          SourcePos Expr       Expr
+          | Plus         SourcePos Expr       Expr
+          | Minus        SourcePos Expr       Expr
+          | Multiple     SourcePos Expr       Expr
+          | Devide       SourcePos Expr       Expr
+          | UnaryMinus   SourcePos Expr
+          | UnaryAddress SourcePos Expr   
+          | UnaryPointer SourcePos Expr
+          | CallFunc     SourcePos String    [Expr]
+          | ArrayAccess  SourcePos Expr       Expr
+          | ExprList     SourcePos [Expr]
+          | Constant     SourcePos Integer
+          | IdentExpr    SourcePos Identifier
           deriving (Show)

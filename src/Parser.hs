@@ -5,6 +5,7 @@ import Debug.Trace
 
 import Text.Parsec
 import Text.Parsec.Expr
+import Text.Parsec.Prim
 import Text.Parsec.String(Parser)
 import Control.Monad
 import Control.Monad.Identity(Identity)
@@ -69,17 +70,20 @@ parseProgram = do
 externalDeclaration :: Parser ExternalDeclaration
 externalDeclaration = try (do x <- declaration
                               return x)
-                  <|> try ( do x <- functionPrototype
-                               return $ FuncProt x)
-                  <|> (do x <- functionDef
-                          return $ FuncDef x)
+                  <|> try ( do pos <- getPosition
+                               x   <- functionPrototype
+                               return $ FuncProt pos x)
+                  <|> (do pos <- getPosition
+                          x   <- functionDef
+                          return $ FuncDef pos x)
                   <?> "parseExternalDeclaration"
 
 
 declaration :: Parser ExternalDeclaration
 declaration = do
-  d <- declaratorList <* semi
-  return $ Decl d
+  pos <- getPosition
+  d   <- declaratorList <* semi
+  return $ Decl pos d
   <?> "declaration"
 
 
@@ -118,11 +122,13 @@ declarator = do
 
 
 directDecl :: Parser DirectDeclarator
-directDecl = try ( do name <- identifier
+directDecl = try ( do pos  <- getPosition
+                      name <- identifier
                       size <- brackets natural
-                      return $ Sequence name size )
-             <|> ( do name <- identifier
-                      return $ Variable name)
+                      return $ Sequence pos name size )
+             <|> ( do pos  <- getPosition
+                      name <- identifier
+                      return $ Variable pos name)
              <?> "directDeclarator"
 
 
@@ -139,10 +145,11 @@ typeSpecifier =  (symbol "int"  >> return CInt)
 
 functionPrototype :: Parser FunctionPrototype
 functionPrototype = do
+  pos                <- getPosition
   t                  <- typeSpecifier
   (p, fname, params) <- funcDeclarator
   _                  <- semi
-  return $ FunctionPrototype (checkPointer p t) fname params
+  return $ FunctionPrototype pos (checkPointer p t) fname params
   <?> "FunctionPrototype"
 
 
@@ -167,10 +174,11 @@ paramDeclaration = do
 
 functionDef :: Parser FunctionDefinition
 functionDef = do
+  pos                <- getPosition
   t                  <- typeSpecifier
   (p, fname, params) <- funcDeclarator
   stmts              <- compoundStmt
-  return $ FunctionDefinition (checkPointer p t) fname params stmts
+  return $ FunctionDefinition pos (checkPointer p t) fname params stmts
   <?> "functionDefinition"
 
 {-  ===================
@@ -179,62 +187,74 @@ functionDef = do
 
 compoundStmt :: Parser CompoundStatement
 compoundStmt = do
+  pos      <- getPosition
   _        <- symbol "{"
   declList <- declarationList
   stmtList <- many (try stmt)
   _        <- symbol "}"
-  return $ CompoundStatement declList stmtList
+  return $ CompoundStatement pos declList stmtList
   <?> "compound statement"
 
 
 declarationList :: Parser DeclarationList
 declarationList = do
+  pos         <- getPosition
   declarators <- many $ try (declaratorList <* semi)
-  return $ DeclarationList declarators
+  return $ DeclarationList pos declarators
   <?> "declarationList"
 
 
 stmt :: Parser Stmt
-stmt =  try (semi >> return EmptyStmt)
-    <|> try (do e <- expr <* semi
-                return $ ExprStmt e)
+stmt =  try (do pos <- getPosition
+                _   <- semi
+                return $ EmptyStmt pos)
+    <|> try (do e   <- expr <* semi
+                pos <- getPosition
+                return $ ExprStmt pos e)
     <|> try (do stmts <- compoundStmt
-                return $ CompoundStmt stmts)
+                pos   <- getPosition
+                return $ CompoundStmt pos stmts)
     <|> try (do symbol "if"
-                e  <- parens expr
-                s  <- stmt
-                return $ IfStmt e s (EmptyStmt))
-    <|> try (do e  <- symbol "if"   >> parens expr
-                s1 <- stmt
-                s2 <- symbol "else" >> stmt
-                return $ IfStmt e s1 s2)
-    <|> try (do e <- symbol "while" >> parens expr
-                s <- stmt
-                return $ WhileStmt e s)
+                pos <- getPosition
+                e   <- parens expr
+                s   <- stmt
+                return $ IfStmt pos e s (EmptyStmt pos))
+    <|> try (do e   <- symbol "if"   >> parens expr
+                pos <- getPosition
+                s1  <- stmt
+                s2  <- symbol "else" >> stmt
+                return $ IfStmt pos e s1 s2)
+    <|> try (do e   <- symbol "while" >> parens expr
+                pos <- getPosition
+                s   <- stmt
+                return $ WhileStmt pos e s)
     <|> try (do symbol "for"
                 symbol "("
+                pos    <- getPosition
                 dec    <- expr <* semi
                 cond   <- expr <* semi
                 update <- expr <* symbol ")"
                 s      <- stmt
-                return $ ForStmt dec cond update s)
+                return $ ForStmt pos dec cond update s)
     <|> try (do symbol "return"
-                e <- expr <* semi
-                return $ ReturnStmt e)
+                pos <- getPosition
+                e   <- expr <* semi
+                return $ ReturnStmt pos e)
     <?> "statement"
 
 
 
 expr :: Parser Expr
-expr = liftM ExprList (assignExpr `sepBy` comma)
+expr = liftM2 ExprList getPosition (assignExpr `sepBy` comma)
       <?> "expression"
 
 assignExpr :: Parser Expr
 assignExpr = try ( do 
+    pos    <- getPosition
     dest   <- logicalOrExpr 
     symbol "="
     assign <- assignExpr
-    return $ AssignExpr dest assign)
+    return $ AssignExpr pos dest assign)
   <|>  logicalOrExpr
   <?> "assignExpr"
 
@@ -255,40 +275,36 @@ table = [[op "*"  Multiple AssocLeft, op "/"  Devide   AssocLeft]
         ,[op "==" Equal    AssocLeft, op "!=" NotEqual AssocLeft]
         ,[op "&&" And      AssocLeft]
         ,[op "||" Or       AssocLeft]]
-  where op s f = Infix(do {reservedOp s; return f} <?> "table")
+  where op s f = Infix(do {
+                        pos <- getPosition;
+                        _   <- reservedOp s;
+                        return $ f pos;} 
+                        <?> "table")
                       
 
 
 unaryExpr :: Parser Expr
 unaryExpr =  try postFixExpr
          <|> try ( do symbol "-"
-                      p <- unaryExpr
-                      return $ UnaryMinus p)
+                      pos <- getPosition
+                      p   <- unaryExpr
+                      return $ UnaryMinus pos p)
          <|> try ( do symbol "&"
-                      p <- unaryExpr
-                      return $ UnaryAddress p)
+                      pos <- getPosition
+                      p   <- unaryExpr
+                      return $ UnaryAddress pos p)
          <|> try ( do symbol "*"
-                      p <- unaryExpr
-                      return $ UnaryPointer p)
+                      pos <- getPosition
+                      p   <- unaryExpr
+                      return $ UnaryPointer pos p)
          <?> "unaryExpr"
 
 
-{-
 postFixExpr :: Parser Expr
-postFixExpr = try (do fname <- identifier
-                      args  <- argExprList
-                      return $ CallFunc fname args)
-          <|> try (do array    <- postFixExpr
-                      accessor <- (brackets expr)
-                      return $ ArrayAccess array accessor)
-          <|> primaryExpr
-          <?> "postFixExpr"
--}
-
-postFixExpr :: Parser Expr
-postFixExpr = try (do fname <- identifier
+postFixExpr = try (do pos   <- getPosition
+                      fname <- identifier
                       args  <- parens argExprList
-                      return $ CallFunc fname args)
+                      return $ CallFunc pos fname args)
           <|> try (do arrayName    <- primaryExpr
                       arrayAccess  <- arrayAccessExpr arrayName
                       return arrayAccess)
@@ -297,8 +313,8 @@ postFixExpr = try (do fname <- identifier
 
 arrayAccessExpr :: Expr -> Parser Expr
 arrayAccessExpr left = do
-  accessor <- many1 $ brackets expr
-  return $ foldl (\acc i -> ArrayAccess acc i) left accessor
+  accessor <- many1 $ liftTM getPosition (brackets expr)
+  return $ foldl (\acc (pos, i) -> ArrayAccess pos acc i) left accessor
   <?> "arrayAccessExpr"
 
 argExprList :: Parser [Expr]
@@ -307,7 +323,12 @@ argExprList = try (assignExpr `sepBy` comma)
 
 primaryExpr :: Parser Expr
 primaryExpr =  try (parens expr)
-           <|> try (liftM Constant natural)
-           <|> liftM IdentExpr identifier
+           <|> try (liftM2 Constant getPosition natural)
+           <|> liftM2 IdentExpr getPosition identifier
            <?> "primaryExpr"
 
+liftTM :: Monad m => m a -> m b -> m (a, b)
+liftTM ma mb = do
+  a <- ma
+  b <- mb
+  return (a, b)
