@@ -36,20 +36,17 @@ data Stmt = EmptyStmt
           | IfStmt       Expr Stmt Stmt
           | WhileStmt    Expr Stmt
           | ForStmt      Expr Expr Expr Stmt
-          | ReturnStmt   Stmt
+          | ReturnStmt   Expr
           deriving (Show)
 
 
-data CompoundStatement = CompoundStatement DeclarationList StatementList
+data CompoundStatement = CompoundStatement DeclarationList [Stmt]
                        deriving (Show)
 
-data DeclarationList = DeclarationList DeclaratorList
+data DeclarationList = DeclarationList [DeclaratorList]
                      deriving (Show)
 
-data StatementList = StatementList [Stmt]
-                   deriving (Show)
-
-data Expr = AssignExpr   Identifier Expr
+data Expr = AssignExpr   Expr       Expr
           | Or           Expr       Expr 
           | And          Expr       Expr
           | Equal        Expr       Expr
