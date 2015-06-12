@@ -14,23 +14,35 @@ type DeclaratorList = [(Type, DirectDeclarator)]
 
 data DirectDeclarator = Variable SourcePos Identifier
                       | Sequence SourcePos Identifier Integer
-                      deriving (Show)
 
-{-
- - ========================
+instance Show DirectDeclarator where
+  show (Variable _ ident)     = ident
+  show (Sequence _ ident int) = concat [ident, "[", show int, "]"]
+
+{- ========================
  -  Data FunctionPrototype  
- - ========================
--}
+ - ========================-}
 data FunctionPrototype  = FunctionPrototype SourcePos Type Identifier [(Type, Identifier)]
                         deriving (Show)
 data FunctionDefinition = FunctionDefinition SourcePos Type Identifier [(Type, Identifier)] CompoundStatement
                         deriving (Show)
 
 
+{-===============
+ -    Type
+ ================-}
 data Type = CInt
           | CVoid
           | CPointer Type
-          deriving(Show)
+          deriving(Eq)
+
+instance Show Type where
+  show (CPointer CInt) = "int *"
+  show (CInt)          = "int "
+  show (CVoid)         = "void "
+  show _               = error "invalid type"
+
+
 
 data Stmt = EmptyStmt    SourcePos
           | ExprStmt     SourcePos Expr
