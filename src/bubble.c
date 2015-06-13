@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int nums[8];
 
 void bubble(int *data, int num);
@@ -19,6 +21,7 @@ void bubble(int *data, int num){
 }
 
 int main(){
+    int i;
     nums[0] = 5;
     nums[1] = 2;
     nums[2] = 7;
@@ -27,7 +30,7 @@ int main(){
     nums[5] = 3;
     nums[6] = 4;
     nums[7] = 8;
-    
     bubble(nums, 8);
+    for(i = 0; i < 8; i = i + 1) printf("%d\t", nums[i]);
     return 0;
 }
