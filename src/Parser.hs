@@ -185,23 +185,15 @@ functionDef = do
  -       Statement
  -  =================== -} 
 
-compoundStmt :: Parser CompoundStatement
+compoundStmt :: Parser Stmt
 compoundStmt = do
   pos      <- getPosition
   _        <- symbol "{"
-  declList <- declarationList
-  stmtList <- many (try stmt)
+  declList <- many $ try (declaratorList <* semi)
+  stmtList <- many $ try stmt
   _        <- symbol "}"
-  return $ CompoundStatement pos declList stmtList
+  return $ CompoundStmt pos declList stmtList
   <?> "compound statement"
-
-
-declarationList :: Parser DeclarationList
-declarationList = do
-  pos         <- getPosition
-  declarators <- many $ try (declaratorList <* semi)
-  return $ DeclarationList pos declarators
-  <?> "declarationList"
 
 
 stmt :: Parser Stmt
@@ -211,9 +203,7 @@ stmt =  try (do pos <- getPosition
     <|> try (do e   <- expr <* semi
                 pos <- getPosition
                 return $ ExprStmt pos e)
-    <|> try (do stmts <- compoundStmt
-                pos   <- getPosition
-                return $ CompoundStmt pos stmts)
+    <|> try compoundStmt
     <|> try (do symbol "if"
                 pos <- getPosition
                 e   <- parens expr
@@ -235,7 +225,13 @@ stmt =  try (do pos <- getPosition
                 cond   <- expr <* semi
                 update <- expr <* symbol ")"
                 s      <- stmt
-                return $ ForStmt pos dec cond update s)
+--              return $ ForStmt pos dec cond update s)
+                return $ CompoundStmt pos 
+                                      [] 
+                                      [ExprStmt pos dec, 
+                                       WhileStmt pos cond (CompoundStmt pos 
+                                                                        []
+                                                                        [s, ExprStmt pos update])])
     <|> try (do symbol "return"
                 pos <- getPosition
                 e   <- expr <* semi
@@ -243,10 +239,9 @@ stmt =  try (do pos <- getPosition
     <?> "statement"
 
 
-
 expr :: Parser Expr
 expr = liftM2 ExprList getPosition (assignExpr `sepBy` comma)
-      <?> "expression"
+    <?> "expression"
 
 assignExpr :: Parser Expr
 assignExpr = try ( do 
@@ -288,7 +283,8 @@ unaryExpr =  try postFixExpr
          <|> try ( do symbol "-"
                       pos <- getPosition
                       p   <- unaryExpr
-                      return $ UnaryMinus pos p)
+--                    return $ UnaryMinus pos p)
+                      return $ Minus pos (Constant pos 0) p) 
          <|> try ( do symbol "&"
                       pos <- getPosition
                       p   <- unaryExpr
@@ -314,7 +310,7 @@ postFixExpr = try (do pos   <- getPosition
 arrayAccessExpr :: Expr -> Parser Expr
 arrayAccessExpr left = do
   accessor <- many1 $ liftTM getPosition (brackets expr)
-  return $ foldl (\acc (pos, i) -> ArrayAccess pos acc i) left accessor
+  return $ foldl (\acc (pos, i) -> UnaryPointer pos (Plus pos acc i)) left accessor
   <?> "arrayAccessExpr"
 
 argExprList :: Parser [Expr]

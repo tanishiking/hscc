@@ -23,8 +23,8 @@ convFuncProt (FunctionPrototype _ ty fname params) =
   concat [show ty, fname, "(", convParams params, ")"]
 
 convFuncDef :: FunctionDefinition -> String
-convFuncDef (FunctionDefinition _ ty fname params compound) =
-  concat [show ty, fname, "(", convParams params, ")", "{\n", convCompound compound, "}\n"]
+convFuncDef (FunctionDefinition _ ty fname params stmt) =
+  concat [show ty, fname, "(", convParams params, ")", "{\n", convStmt stmt, "}\n"]
 
 
 {----------------------------------------------------------------}
@@ -33,13 +33,13 @@ convParams :: [(Type, Identifier)] -> String
 convParams =
   concat . intersperse ", " . foldr (\(t, i) acc -> (show t ++ i):acc) []
 
-convCompound :: CompoundStatement -> String
-convCompound (CompoundStatement _ declarations stmts) =
-  concat [convDeclarationList declarations, f stmts]
+convCompound :: [DeclaratorList] -> [Stmt] -> String
+convCompound decls stmts =
+  concat [convDeclarationList decls, f stmts]
     where f stmts = foldr (\s acc -> convStmt s ++ "\n" ++ acc) "" stmts
 
-convDeclarationList :: DeclarationList -> String
-convDeclarationList (DeclarationList _ declaratorLists) = concat $ map convDeclList declaratorLists
+convDeclarationList :: [DeclaratorList] -> String
+convDeclarationList decls = concat $ map convDeclList decls
 
 convStmts :: [Stmt] -> String
 convStmts [s] = convStmt s
@@ -50,17 +50,17 @@ convStmts stmts = concat["{\n",
 convStmt :: Stmt -> String
 convStmt (EmptyStmt _)          = ";" 
 convStmt (ExprStmt  _ e)        = convExpr e ++ ";"
-convStmt (CompoundStmt _ s)     = convCompound s
+convStmt (CompoundStmt _ ds ss) = convCompound ds ss
 convStmt (IfStmt _ e s1 s2)     = concat ["if(", convExpr e, ") ",
                                           convStmt s1, "else ",
                                           convStmt s2]
 convStmt (WhileStmt _ e s)      = concat ["while(", convExpr e,
                                           ") ", convStmt s]
-convStmt (ForStmt _ e1 e2 e3 s) = concat ["for(", 
-                                          convExpr e1, "; ",
-                                          convExpr e2, "; ",
-                                          convExpr e3, ")",
-                                          convStmt s] 
+--convStmt (ForStmt _ e1 e2 e3 s) = concat ["for(", 
+--                                          convExpr e1, "; ",
+--                                          convExpr e2, "; ",
+--                                          convExpr e3, ")",
+--                                          convStmt s] 
 convStmt (ReturnStmt _ e)       = concat ["return ",
                                           convExpr e,
                                           ";"]
@@ -80,11 +80,11 @@ convExpr (Minus _ e1 e2)       = concat [convExpr e1, " - ", convExpr e2]
 convExpr (Plus _ e1 e2)        = concat [convExpr e1, " + ", convExpr e2]
 convExpr (Multiple _ e1 e2)    = concat [convExpr e1, " * ", convExpr e2]
 convExpr (Devide _ e1 e2)      = concat [convExpr e1, " / ", convExpr e2]
-convExpr (UnaryMinus _ e)      = "-" ++ convExpr e
+--convExpr (UnaryMinus _ e)      = "-" ++ convExpr e
 convExpr (UnaryAddress _ e)    = "&" ++ convExpr e
-convExpr (UnaryPointer _ e)    = "*" ++ convExpr e
+convExpr (UnaryPointer _ e)    = "*" ++ "(" ++ convExpr e ++ ")"
 convExpr (CallFunc _ name es)  = concat [name, "(", convExprs es, ")"]
-convExpr (ArrayAccess _ e1 e2) = concat [convExpr e1, "[", convExpr e2, "]"] 
+--convExpr (ArrayAccess _ e1 e2) = concat [convExpr e1, "[", convExpr e2, "]"] 
 convExpr (ExprList _ es)       = convExprs es
 convExpr (Constant _ int)      = show int
 convExpr (IdentExpr _ ident)   = ident

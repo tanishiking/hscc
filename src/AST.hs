@@ -24,7 +24,7 @@ instance Show DirectDeclarator where
  - ========================-}
 data FunctionPrototype  = FunctionPrototype SourcePos Type Identifier [(Type, Identifier)]
                         deriving (Show)
-data FunctionDefinition = FunctionDefinition SourcePos Type Identifier [(Type, Identifier)] CompoundStatement
+data FunctionDefinition = FunctionDefinition SourcePos Type Identifier [(Type, Identifier)] Stmt
                         deriving (Show)
 
 
@@ -46,19 +46,18 @@ instance Show Type where
 
 data Stmt = EmptyStmt    SourcePos
           | ExprStmt     SourcePos Expr
-          | CompoundStmt SourcePos CompoundStatement
+          | CompoundStmt SourcePos [DeclaratorList] [Stmt]
           | IfStmt       SourcePos Expr Stmt Stmt
           | WhileStmt    SourcePos Expr Stmt
-          | ForStmt      SourcePos Expr Expr Expr Stmt
           | ReturnStmt   SourcePos Expr
           deriving (Show)
 
 
-data CompoundStatement = CompoundStatement SourcePos DeclarationList [Stmt]
-                       deriving (Show)
+--data CompoundStatement = CompoundStatement SourcePos DeclarationList [Stmt]
+--                       deriving (Show)
 
-data DeclarationList = DeclarationList SourcePos [DeclaratorList]
-                     deriving (Show)
+--data DeclarationList = DeclarationList SourcePos [DeclaratorList]
+--                     deriving (Show)
 
 data Expr = AssignExpr   SourcePos Expr       Expr
           | Or           SourcePos Expr       Expr 
@@ -73,11 +72,11 @@ data Expr = AssignExpr   SourcePos Expr       Expr
           | Minus        SourcePos Expr       Expr
           | Multiple     SourcePos Expr       Expr
           | Devide       SourcePos Expr       Expr
-          | UnaryMinus   SourcePos Expr
+--        | UnaryMinus   SourcePos Expr
           | UnaryAddress SourcePos Expr   
           | UnaryPointer SourcePos Expr
           | CallFunc     SourcePos String    [Expr]
-          | ArrayAccess  SourcePos Expr       Expr
+--        | ArrayAccess  SourcePos Expr       Expr
           | ExprList     SourcePos [Expr]
           | Constant     SourcePos Integer
           | IdentExpr    SourcePos Identifier
