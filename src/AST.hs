@@ -3,7 +3,32 @@ module AST where
 import Text.Parsec
 
 type Program = [ExternalDeclaration]
+
 type Identifier = String
+
+{-
+type Level = Integer
+
+data Identifier = IdentBefore    String
+                | IdentGlobal    String Level
+                | IdentVarDecl   String Level Integer
+                | IdentParam     String Level Integer
+                | IdentFuncProto String Level Integer
+                | IdentFuncDef   String Level Integer
+                | IdentVarRef    String Level Integer
+                | IdentFuncCall  String Level
+                deriving (Eq)
+
+deriving Show Identifier where
+  show (IdentBefore s)        = s
+  show (IdentGlobal s v)      = s ++ ":" ++ show v
+  show (IdentVarRef s v1 v2)  = s ++ ":" ++ show v1 ++ ":" show v2
+  show (IdentParam s v1 v2)   = s ++ ":" ++ show v1 ++ ":" show v2
+  show (IdentFuncDef s v _)   = s ++ ":" ++ show v
+  show (IdentVarRef s v _)    = s ++ ":" ++ show v
+  show (IdentFuncCall s v)    = s ++ ":" ++ show v
+-}
+
 
 data ExternalDeclaration = Decl     SourcePos DeclaratorList
                          | FuncProt SourcePos FunctionPrototype

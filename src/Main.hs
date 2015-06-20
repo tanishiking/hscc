@@ -6,15 +6,19 @@ import Text.Parsec
 import AST
 import Parser
 import ProgGenerator
+import Semantic
 
 
-run :: String -> String
+run :: String -> Either String Program
 run input = case parse parseProgram "smallC" input of
-  Left  err -> "No match" ++ show err
-  Right val -> convProg val
+  Left  err -> Left (show err)
+  Right val -> Right val
 
 
 main = do 
   args <- getArgs
   file <- readFile $ head args
-  putStrLn $ run file
+  putStrLn $ output $ semanticCheckProgram $ run file
+    where output code = case code of
+                        Left  err -> err
+                        Right val -> show val
