@@ -60,11 +60,17 @@ brackets = P.brackets lexer
  -  Parser
    ========-}
 
-parseProgram :: Parser Program
-parseProgram = do
+parseProgram :: String -> Either String Program
+parseProgram input = case parse program "Parse" input of
+                     Left  err -> Left $ show err
+                     Right val -> Right val
+
+
+program :: Parser Program
+program = do
   x <- many1 externalDeclaration
   return x
-  <?> "parseProgram"
+  <?> "program"
 
 
 externalDeclaration :: Parser ExternalDeclaration

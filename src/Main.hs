@@ -9,16 +9,14 @@ import ProgGenerator
 import Semantic
 
 
-run :: String -> Either String Program
-run input = case parse parseProgram "smallC" input of
-  Left  err -> Left (show err)
-  Right val -> Right val
+run :: String -> String
+run input = case parseProgram input >>= semanticCheckProgram of
+  Left  err -> err
+  Right val -> show val
 
 
+main :: IO ()
 main = do 
   args <- getArgs
   file <- readFile $ head args
-  putStrLn $ output $ semanticCheckProgram $ run file
-    where output code = case code of
-                        Left  err -> err
-                        Right val -> show val
+  putStrLn $ run file

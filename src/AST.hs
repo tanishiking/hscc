@@ -13,7 +13,7 @@ data Identifier = IdentBefore    String
                 | IdentGlobal    String Level
                 | IdentVarDecl   String Level Integer
                 | IdentParam     String Level Integer
-                | IdentFuncProto String Level Integer
+                | IdentFuncProt String Level Integer
                 | IdentFuncDef   String Level Integer
                 | IdentVarRef    String Level Integer
                 | IdentFuncCall  String Level
