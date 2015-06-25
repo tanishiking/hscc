@@ -13,16 +13,32 @@ checkProgram :: Program -> Either String Program
 checkProgram = mapM checkExternalDecl
 
 
+{-==========================
+ -   ExternalDeclaration
+ ===========================-}
+
 checkExternalDecl :: ExternalDeclaration -> Either String ExternalDeclaration
-checkExternalDecl (Decl pos declarators)  = liftM2 Decl cpos cdeclarators
+checkExternalDecl (Decl pos declarators)  = checkExDeclarators pos declarators
+checkExternalDecl (FuncProt pos funcProt) = checkExFuncProt    pos funcProt
+checkExternalDecl (FuncDef pos funcDef)   = checkExFuncDef     pos funcDef
+
+
+checkExDeclarators :: SourcePos -> DeclaratorList -> Either String ExternalDeclaration
+checkExDeclarators pos declarators = liftM2 Decl cpos cdeclarators
   where
     cpos         = checkPosition pos
     cdeclarators = checkDeclaratorList declarators
-checkExternalDecl (FuncProt pos funcProt) = liftM2 FuncProt cpos cfuncProt
+
+
+checkExFuncProt :: SourcePos -> FunctionPrototype -> Either String ExternalDeclaration
+checkExFuncProt pos funcProt = liftM2 FuncProt cpos cfuncProt
   where
     cpos      = checkPosition pos
     cfuncProt = checkFuncProt funcProt
-checkExternalDecl (FuncDef pos funcDef)   = liftM2 FuncDef cpos cfuncDef
+
+
+checkExFuncDef :: SourcePos -> FunctionDefinition -> Either String ExternalDeclaration
+checkExFuncDef pos funcDef = liftM2 FuncDef cpos cfuncDef
   where
     cpos     = checkPosition pos
     cfuncDef = checkFuncDef funcDef
