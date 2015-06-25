@@ -4,6 +4,7 @@ import Control.Monad
 import Data.List
 import Text.Parsec
 import AST
+import Environment
 
 semanticCheckProgram :: Program -> Either String Program
 semanticCheckProgram = checkProgram
@@ -29,13 +30,11 @@ checkExDeclarators pos declarators = liftM2 Decl cpos cdeclarators
     cpos         = checkPosition pos
     cdeclarators = checkDeclaratorList declarators
 
-
 checkExFuncProt :: SourcePos -> FunctionPrototype -> Either String ExternalDeclaration
 checkExFuncProt pos funcProt = liftM2 FuncProt cpos cfuncProt
   where
     cpos      = checkPosition pos
     cfuncProt = checkFuncProt funcProt
-
 
 checkExFuncDef :: SourcePos -> FunctionDefinition -> Either String ExternalDeclaration
 checkExFuncDef pos funcDef = liftM2 FuncDef cpos cfuncDef
@@ -92,4 +91,5 @@ checkParams :: [(Type, Identifier)] -> Either String [(Type, Identifier)]
 checkParams params = return params
   
 checkIdentifier :: Identifier -> Either String Identifier
-checkIdentifier = return
+checkIdentifier = do
+  return

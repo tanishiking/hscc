@@ -29,6 +29,9 @@ whiteSpace = P.whiteSpace lexer
 lexeme :: forall a. Parser a -> Parser a
 lexeme = P.lexeme lexer
 
+identifier :: Parser String
+identifier = P.identifier lexer
+
 symbol :: String -> Parser String
 symbol = P.symbol lexer
 
@@ -326,10 +329,6 @@ primaryExpr =  try (parens expr)
            <|> liftM2 IdentExpr getPosition identifier
            <?> "primaryExpr"
 
-identifier :: Parser Identifier
-identifier = do
-  name <- P.identifier lexer
-  return $ IdentBefore name
 
 liftTM :: Monad m => m a -> m b -> m (a, b)
 liftTM ma mb = do
