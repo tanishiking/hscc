@@ -76,12 +76,15 @@ program = do
 externalDeclaration :: Parser ExternalDeclaration
 externalDeclaration = try (do x <- declaration
                               return x)
-                  <|> try ( do pos <- getPosition
-                               x   <- functionPrototype
-                               return $ FuncProt pos x)
+                  <|> try ( do pos                <- getPosition
+                               t                  <- typeSpecifier
+                               (p, fname, params) <- funcDeclarator <* semi
+                               return $ FuncProt pos (checkPointer p t) fname params)
                   <|> (do pos <- getPosition
-                          x   <- functionDef
-                          return $ FuncDef pos x)
+                          t    <- typeSpecifier
+                          (p, fname, params) <- funcDeclarator
+                          s    <- stmt
+                          return $ FuncDef pos (checkPointer p t) fname params s)
                   <?> "parseExternalDeclaration"
 
 
@@ -143,23 +146,7 @@ typeSpecifier =  (symbol "int"  >> return CInt)
              <|> (symbol "void" >> return CVoid)
              <?> "typeSpecifier"
 
-{-
- - ========================
- -    Function Prototype
- - ========================
- -}
 
-functionPrototype :: Parser FunctionPrototype
-functionPrototype = do
-  pos                <- getPosition
-  t                  <- typeSpecifier
-  (p, fname, params) <- funcDeclarator
-  _                  <- semi
-  return $ FunctionPrototype pos (checkPointer p t) fname params
-  <?> "FunctionPrototype"
-
-
--- String '*', Identifier functionName,
 funcDeclarator :: Parser (String, Identifier, [(Type, Identifier)])
 funcDeclarator = do
   p      <- pointer
@@ -178,14 +165,6 @@ paramDeclaration = do
   <?> "paramDeclaration"
 
 
-functionDef :: Parser FunctionDefinition
-functionDef = do
-  pos                <- getPosition
-  t                  <- typeSpecifier
-  (p, fname, params) <- funcDeclarator
-  stmts              <- compoundStmt
-  return $ FunctionDefinition pos (checkPointer p t) fname params stmts
-  <?> "functionDefinition"
 
 {-  ===================
  -       Statement

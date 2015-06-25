@@ -11,8 +11,9 @@ type Level = Integer
 type Identifier = String
 
 data ExternalDeclaration = Decl     SourcePos DeclaratorList
-                         | FuncProt SourcePos FunctionPrototype
-                         | FuncDef  SourcePos FunctionDefinition
+                       --  | FuncProt SourcePos FunctionPrototype
+                         | FuncProt SourcePos Type Identifier DeclaratorList
+                         | FuncDef  SourcePos Type Identifier DeclaratorList Stmt
                          deriving (Show)
 
 type DeclaratorList = [(Type, DirectDeclarator)]
@@ -23,15 +24,6 @@ data DirectDeclarator = Variable SourcePos Identifier
 instance Show DirectDeclarator where
   show (Variable _ ident)     = show ident
   show (Sequence _ ident int) = concat [show ident, "[", show int, "]"]
-
-{- ========================
- -  Data FunctionPrototype  
- - ========================-}
-data FunctionPrototype  = FunctionPrototype SourcePos Type Identifier [(Type, Identifier)]
-                        deriving (Show)
-data FunctionDefinition = FunctionDefinition SourcePos Type Identifier [(Type, Identifier)] Stmt
-                        deriving (Show)
-
 
 {-===============
  -    Type
