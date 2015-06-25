@@ -4,30 +4,28 @@ import Text.Parsec
 
 type Program = [ExternalDeclaration]
 
-type Identifier = String
+--type Identifier = String
 
-{-
 type Level = Integer
 
-data Identifier = IdentBefore    String
-                | IdentGlobal    String Level
-                | IdentVarDecl   String Level Integer
-                | IdentParam     String Level Integer
+data Identifier = IdentBefore   String
+                | IdentGlobal   String Level
+                | IdentVarDecl  String Level Integer
+                | IdentParam    String Level Integer
                 | IdentFuncProt String Level Integer
-                | IdentFuncDef   String Level Integer
-                | IdentVarRef    String Level Integer
-                | IdentFuncCall  String Level
+                | IdentFuncDef  String Level Integer
+                | IdentVarRef   String Level Integer
+                | IdentFuncCall String Level
                 deriving (Eq)
 
-deriving Show Identifier where
+instance Show Identifier where
   show (IdentBefore s)        = s
   show (IdentGlobal s v)      = s ++ ":" ++ show v
-  show (IdentVarRef s v1 v2)  = s ++ ":" ++ show v1 ++ ":" show v2
-  show (IdentParam s v1 v2)   = s ++ ":" ++ show v1 ++ ":" show v2
+  show (IdentVarDecl s v1 v2) = concat [s, ":", show v1, ":", show v2]
+  show (IdentParam s v1 v2)   = concat [s, ":", show v1, ":", show v2]
   show (IdentFuncDef s v _)   = s ++ ":" ++ show v
   show (IdentVarRef s v _)    = s ++ ":" ++ show v
   show (IdentFuncCall s v)    = s ++ ":" ++ show v
--}
 
 
 data ExternalDeclaration = Decl     SourcePos DeclaratorList
@@ -41,8 +39,8 @@ data DirectDeclarator = Variable SourcePos Identifier
                       | Sequence SourcePos Identifier Integer
 
 instance Show DirectDeclarator where
-  show (Variable _ ident)     = ident
-  show (Sequence _ ident int) = concat [ident, "[", show int, "]"]
+  show (Variable _ ident)     = show ident
+  show (Sequence _ ident int) = concat [show ident, "[", show int, "]"]
 
 {- ========================
  -  Data FunctionPrototype  
@@ -84,24 +82,24 @@ data Stmt = EmptyStmt    SourcePos
 --data DeclarationList = DeclarationList SourcePos [DeclaratorList]
 --                     deriving (Show)
 
-data Expr = AssignExpr   SourcePos Expr       Expr
-          | Or           SourcePos Expr       Expr 
-          | And          SourcePos Expr       Expr
-          | Equal        SourcePos Expr       Expr
-          | NotEqual     SourcePos Expr       Expr
-          | Lt           SourcePos Expr       Expr
-          | Gt           SourcePos Expr       Expr
-          | Lte          SourcePos Expr       Expr 
-          | Gte          SourcePos Expr       Expr
-          | Plus         SourcePos Expr       Expr
-          | Minus        SourcePos Expr       Expr
-          | Multiple     SourcePos Expr       Expr
-          | Devide       SourcePos Expr       Expr
+data Expr = AssignExpr   SourcePos Expr        Expr
+          | Or           SourcePos Expr        Expr 
+          | And          SourcePos Expr        Expr
+          | Equal        SourcePos Expr        Expr
+          | NotEqual     SourcePos Expr        Expr
+          | Lt           SourcePos Expr        Expr
+          | Gt           SourcePos Expr        Expr
+          | Lte          SourcePos Expr        Expr 
+          | Gte          SourcePos Expr        Expr
+          | Plus         SourcePos Expr        Expr
+          | Minus        SourcePos Expr        Expr
+          | Multiple     SourcePos Expr        Expr
+          | Devide       SourcePos Expr        Expr
 --        | UnaryMinus   SourcePos Expr
           | UnaryAddress SourcePos Expr   
           | UnaryPointer SourcePos Expr
-          | CallFunc     SourcePos String    [Expr]
---        | ArrayAccess  SourcePos Expr       Expr
+          | CallFunc     SourcePos Identifier [Expr]
+--        | ArrayAccess  SourcePos Expr        Expr
           | ExprList     SourcePos [Expr]
           | Constant     SourcePos Integer
           | IdentExpr    SourcePos Identifier

@@ -35,9 +35,6 @@ symbol = P.symbol lexer
 natural :: Parser Integer
 natural = P.natural lexer
 
-identifier :: Parser String
-identifier = P.identifier lexer
-
 semi :: Parser String
 semi = P.semi lexer
 
@@ -328,6 +325,11 @@ primaryExpr =  try (parens expr)
            <|> try (liftM2 Constant getPosition natural)
            <|> liftM2 IdentExpr getPosition identifier
            <?> "primaryExpr"
+
+identifier :: Parser Identifier
+identifier = do
+  name <- P.identifier lexer
+  return $ IdentBefore name
 
 liftTM :: Monad m => m a -> m b -> m (a, b)
 liftTM ma mb = do
