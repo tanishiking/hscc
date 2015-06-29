@@ -6,6 +6,7 @@ import Control.Monad
 import Control.Monad.Writer
 import Control.Monad.State.Strict
 import AST
+import Debug.Trace
 
 {- 環境とエラーメッセージを持つstate -}
 type StateEnv = StateT Env (Writer [String])
@@ -45,11 +46,7 @@ initialEnv = M.fromList [(0, [("print", (Func, chfunc, globalLevel))])]
   where chfunc = ChFunc ChVoid [ChInt]
 
 
-{-
- - collectGlobalDecl でグローバルの情報を収集する
- - -}
-
-
+--まずcollectGlobalDeclでグローバルの情報を収集し環境に保存
 collectGlobalDecl :: Program -> StateEnv ()
 collectGlobalDecl = mapM_ collectExternalDecl
 
@@ -89,9 +86,11 @@ appendEnv level info = liftM (M.insertWith (++) level [info]) get >>= put
 appendWithDupCheck :: SourcePos -> Level -> Info -> StateEnv ()
 appendWithDupCheck pos lev info =
   let name = fst info in do
-    existingInfo <- findAtTheLevel lev name
-    case existingInfo of
-      (Just _) -> error $ concat [show pos, "duplicate variable: ", show name]
+    maybeInfo <- find lev name
+    case maybeInfo of
+      (Just mInfo) -> if (trd' . snd $ mInfo) == paramLevel
+                      then (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv bodyLevel info
+                      else error $ concat [show pos, "duplicate variable: ", show name]
       Nothing  -> appendEnv lev info
 
 

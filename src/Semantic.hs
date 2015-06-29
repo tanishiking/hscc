@@ -45,7 +45,7 @@ checkExFuncProt pos ty name params =
 checkExFuncDef :: SourcePos -> Type -> Identifier -> [(Type, Identifier)] -> Stmt -> StateEnv CheckedEDecl
 checkExFuncDef pos ty name params body =
   let fInfo      =  (name, (FProt, convType ty, globalLevel))
-      paramsInfo = map (makeParamInfo pos) params 
+      paramsInfo = map (makeParamInfo pos) params
       cbody      = checkStmt paramLevel body in do
   levCheckedBody <- withNewEnv paramLevel
                                (mapM_ (appendWithDupCheck pos paramLevel) paramsInfo)
@@ -59,10 +59,10 @@ checkStmt lev (ExprStmt _ e) = do
   cexpr <- checkExpr lev e
   return $ CheckedExprStmt cexpr
 checkStmt lev (CompoundStmt pos dList stmts) =
-  let declsInfo = map (makeVarInfo pos lev) dList
-      cstmts    = mapM (checkStmt lev) stmts in do
+  let declsInfo = map (makeVarInfo pos (lev+1)) dList
+      cstmts    = mapM (checkStmt (lev+1)) stmts in do
   levCheckedStmts <- withNewEnv (lev+1)
-                                (mapM_ (appendWithDupCheck pos lev) declsInfo)
+                                (mapM_ (appendWithDupCheck pos (lev+1)) declsInfo)
                                 cstmts
   return $ CheckedCompoundStmt declsInfo levCheckedStmts
 checkStmt lev (IfStmt pos e s1 s2) = do
