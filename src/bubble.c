@@ -1,9 +1,8 @@
-#include <stdio.h>
-
 int nums[8];
 
 void bubble(int *data, int num);
 void swap(int *data, int a, int b);
+int main ();
 
 void swap(int *data, int a, int b){
     int temp;
@@ -31,6 +30,6 @@ int main(){
     nums[6] = 4;
     nums[7] = 8;
     bubble(nums, 8);
-    for(i = 0; i < 8; i = i + 1) printf("%d\t", nums[i]);
+    for(i = 0; i < 8; i = i + 1) print(nums[i]);
     return 0;
 }
