@@ -29,9 +29,11 @@ data ChType = ChInt
 globalLevel :: Level
 globalLevel = 0
 
-
 paramLevel :: Level
 paramLevel = 1
+
+bodyLevel :: Level
+bodyLevel = 2
 
 
 runEnv :: StateEnv a -> Env -> (a, [String])
@@ -41,6 +43,11 @@ runEnv s env = runWriter (evalStateT s env)
 initialEnv :: Env
 initialEnv = M.fromList [(0, [("print", (Func, chfunc, globalLevel))])]
   where chfunc = ChFunc ChVoid [ChInt]
+
+
+{-
+ - collectGlobalDecl でグローバルの情報を収集する
+ - -}
 
 
 collectGlobalDecl :: Program -> StateEnv ()
@@ -69,6 +76,11 @@ collectExternalDecl (FuncDef pos ty name args stmt)
                      _                 -> appendEnv globalLevel funcInfo
 --    Nothing  -> appendEnv globalLevel funcInfo
       Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
+
+
+{-============================
+ -        Utility
+ - ===========================-}
 
 appendEnv :: Level -> Info -> StateEnv ()
 appendEnv level info = liftM (M.insertWith (++) level [info]) get >>= put
@@ -134,15 +146,15 @@ delLevel lev = (liftM (M.delete lev) get) >>= put
 
 {- Level:       新しい環境のレベル 
  - StateEnv (): 新しい環境への情報の追加
- - StateEnv (): 新しい環境内での実際の動作
+ - StateEnv a : 新しい環境内での実際の動作
  - StateEnv a : 環境を削除 -}
 withNewEnv :: Level -> StateEnv () -> StateEnv a -> StateEnv a
-withNewEnv lev append body = append >> body
+withNewEnv lev append body = append >> body <* delLevel lev
 
 
 find :: Level -> Identifier -> StateEnv (Maybe Info)
 find lev name = do
-  if lev <= (-1)
+  if lev < 0
   then return Nothing
   else do
     env <- get

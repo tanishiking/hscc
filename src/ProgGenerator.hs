@@ -25,13 +25,11 @@ convParams :: [(Type, Identifier)] -> String
 convParams =
   concat . intersperse ", " . foldr (\(t, i) acc -> (show t ++ show i):acc) []
 
-convCompound :: [DeclaratorList] -> [Stmt] -> String
+convCompound :: DeclaratorList -> [Stmt] -> String
 convCompound decls stmts =
-  concat [convDeclarationList decls, f stmts]
+  concat [convDeclList decls, f stmts]
     where f stmts = foldr (\s acc -> convStmt s ++ "\n" ++ acc) "" stmts
 
-convDeclarationList :: [DeclaratorList] -> String
-convDeclarationList decls = concat $ map convDeclList decls
 
 convStmts :: [Stmt] -> String
 convStmts [s] = convStmt s

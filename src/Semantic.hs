@@ -22,12 +22,8 @@ checkProgram :: Program -> StateEnv CheckedProgram
 checkProgram = mapM checkExternalDecl
 
 
-{-==========================
- -   ExternalDeclaration
- ===========================-}
-
 checkExternalDecl :: ExternalDeclaration -> StateEnv CheckedEDecl 
-checkExternalDecl (Decl pos declarators)          = checkExDeclarators pos declarators
+checkExternalDecl (Decl pos declarators)            = checkExDeclarators pos declarators
 checkExternalDecl (FuncProt pos ty name params)     = checkExFuncProt    pos ty name params
 checkExternalDecl (FuncDef pos ty name params stmt) = checkExFuncDef     pos ty name params stmt
 
@@ -50,7 +46,7 @@ checkExFuncDef :: SourcePos -> Type -> Identifier -> [(Type, Identifier)] -> Stm
 checkExFuncDef pos ty name params body =
   let fInfo      =  (name, (FProt, convType ty, globalLevel))
       paramsInfo = map (makeParamInfo pos) params in do
-  cbody    <- checkStmt 2 body
+  cbody    <- checkStmt bodyLevel body
   return $ CheckedFuncDef pos fInfo paramsInfo cbody
 
 
@@ -59,9 +55,10 @@ checkStmt lev (EmptyStmt _)  = return CheckedEmptyStmt
 checkStmt lev (ExprStmt _ e) = do
   cexpr <- checkExpr lev e
   return $ CheckedExprStmt cexpr
-checkStmt lev (CompoundStmt pos dLists stmts) =
-  let declsInfo = map (map (makeVarInfo pos lev)) dLists in do
-  cstmts <- mapM (checkStmt lev) stmts
+checkStmt lev (CompoundStmt pos dList stmts) =
+  let declsInfo = map (makeVarInfo pos lev) dList
+      cstmts    = mapM (checkStmt lev) stmts in do
+  withNewEnv (lev+1) declsInfo
   return $ CheckedCompoundStmt declsInfo cstmts
 checkStmt lev (IfStmt pos e s1 s2) = do
   ce  <- checkExpr lev e
@@ -148,8 +145,8 @@ checkExpr lev (Constant pos num) = return $ CheckedConstant pos num
 checkExpr lev (IdentExpr pos name) = do
   info <- findOrErr pos lev name
   case info of
-    (_, (Func, _, _))     -> error $ concat [show pos, "invalid reference to function: ", show name]
+    (_, (Func, _, _))  -> error $ concat [show pos, "invalid reference to function: ", show name]
     (_, (FProt, _, _)) -> error $ concat [show pos, "invalid reference to function prototype: ", show name]
-    varInfo               -> return $ CheckedIdentExpr pos varInfo
+    varInfo            -> return $ CheckedIdentExpr pos varInfo
 
 

@@ -177,7 +177,7 @@ compoundStmt = do
   declList <- many $ try (declaratorList <* semi)
   stmtList <- many $ try stmt
   _        <- symbol "}"
-  return $ CompoundStmt pos declList stmtList
+  return $ CompoundStmt pos (concat declList) stmtList
   <?> "compound statement"
 
 

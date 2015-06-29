@@ -40,7 +40,7 @@ instance Show Type where
 
 data Stmt = EmptyStmt    SourcePos
           | ExprStmt     SourcePos Expr
-          | CompoundStmt SourcePos [DeclaratorList] [Stmt]
+          | CompoundStmt SourcePos DeclaratorList [Stmt]
           | IfStmt       SourcePos Expr Stmt Stmt
           | WhileStmt    SourcePos Expr Stmt
           | ReturnStmt   SourcePos Expr
