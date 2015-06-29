@@ -58,8 +58,11 @@ checkStmt lev (ExprStmt _ e) = do
 checkStmt lev (CompoundStmt pos dList stmts) =
   let declsInfo = map (makeVarInfo pos lev) dList
       cstmts    = mapM (checkStmt lev) stmts in do
-  withNewEnv (lev+1) declsInfo
-  return $ CheckedCompoundStmt declsInfo cstmts
+  levCheckedStmts <- 
+    withNewEnv lev 
+               (mapM_ (appendWithDupCheck pos lev) declsInfo)
+              cstmts
+  return $ CheckedCompoundStmt declsInfo levCheckedStmts
 checkStmt lev (IfStmt pos e s1 s2) = do
   ce  <- checkExpr lev e
   cs1 <- checkStmt lev s1
