@@ -48,7 +48,7 @@ collectGlobalDecl = mapM_ collectExternalDecl
 
 
 collectExternalDecl :: ExternalDeclaration -> StateEnv ()
-collectExternalDecl (Decl pos declarators) = mapM_ (appendEnv globalLevel) (map (makeVarInfo pos globalLevel) declarators)
+collectExternalDecl (Decl pos declarators) = mapM_ (appendWithDupCheck pos globalLevel) (map (makeVarInfo pos globalLevel) declarators)
 collectExternalDecl (FuncProt pos ty name args)
   = let funcInfo = makeFuncInfo ty name args FProt in do
     maybeInfo <- findAtTheLevel globalLevel name
