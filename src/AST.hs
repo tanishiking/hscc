@@ -6,31 +6,11 @@ type Program = [ExternalDeclaration]
 
 --type Identifier = String
 
-type Level = Integer
-
-data Identifier = IdentBefore   String
-                | IdentGlobal   String Level
-                | IdentVarDecl  String Level Integer
-                | IdentParam    String Level Integer
-                | IdentFuncProt String Level Integer
-                | IdentFuncDef  String Level Integer
-                | IdentVarRef   String Level Integer
-                | IdentFuncCall String Level
-                deriving (Eq)
-
-instance Show Identifier where
-  show (IdentBefore s)        = s
-  show (IdentGlobal s v)      = s ++ ":" ++ show v
-  show (IdentVarDecl s v1 v2) = concat [s, ":", show v1, ":", show v2]
-  show (IdentParam s v1 v2)   = concat [s, ":", show v1, ":", show v2]
-  show (IdentFuncDef s v _)   = s ++ ":" ++ show v
-  show (IdentVarRef s v _)    = s ++ ":" ++ show v
-  show (IdentFuncCall s v)    = s ++ ":" ++ show v
-
+type Identifier = String
 
 data ExternalDeclaration = Decl     SourcePos DeclaratorList
-                         | FuncProt SourcePos FunctionPrototype
-                         | FuncDef  SourcePos FunctionDefinition
+                         | FuncProt SourcePos Type Identifier [(Type, Identifier)]
+                         | FuncDef  SourcePos Type Identifier [(Type,Identifier)] Stmt
                          deriving (Show)
 
 type DeclaratorList = [(Type, DirectDeclarator)]
@@ -41,15 +21,6 @@ data DirectDeclarator = Variable SourcePos Identifier
 instance Show DirectDeclarator where
   show (Variable _ ident)     = show ident
   show (Sequence _ ident int) = concat [show ident, "[", show int, "]"]
-
-{- ========================
- -  Data FunctionPrototype  
- - ========================-}
-data FunctionPrototype  = FunctionPrototype SourcePos Type Identifier [(Type, Identifier)]
-                        deriving (Show)
-data FunctionDefinition = FunctionDefinition SourcePos Type Identifier [(Type, Identifier)] Stmt
-                        deriving (Show)
-
 
 {-===============
  -    Type
@@ -69,7 +40,7 @@ instance Show Type where
 
 data Stmt = EmptyStmt    SourcePos
           | ExprStmt     SourcePos Expr
-          | CompoundStmt SourcePos [DeclaratorList] [Stmt]
+          | CompoundStmt SourcePos DeclaratorList [Stmt]
           | IfStmt       SourcePos Expr Stmt Stmt
           | WhileStmt    SourcePos Expr Stmt
           | ReturnStmt   SourcePos Expr
@@ -95,12 +66,11 @@ data Expr = AssignExpr   SourcePos Expr        Expr
           | Minus        SourcePos Expr        Expr
           | Multiple     SourcePos Expr        Expr
           | Devide       SourcePos Expr        Expr
---        | UnaryMinus   SourcePos Expr
           | UnaryAddress SourcePos Expr   
           | UnaryPointer SourcePos Expr
           | CallFunc     SourcePos Identifier [Expr]
---        | ArrayAccess  SourcePos Expr        Expr
           | ExprList     SourcePos [Expr]
           | Constant     SourcePos Integer
           | IdentExpr    SourcePos Identifier
           deriving (Show)
+

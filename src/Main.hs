@@ -2,6 +2,7 @@ module Main where
 
 import System.Environment
 import Text.Parsec
+import Control.Exception
 
 import AST
 import Parser
@@ -10,9 +11,11 @@ import Semantic
 
 
 run :: String -> String
-run input = case parseProgram input >>= semanticCheckProgram of
-  Left  err -> err
-  Right val -> show val
+run input = 
+  let prog = parseProgram input in
+  case prog of
+    Left  err -> err
+    Right val -> show (fst $ semanticCheck val)
 
 
 main :: IO ()
