@@ -12,7 +12,7 @@ data CheckedEDecl = CheckedDecl     SourcePos [Info]
 
 data CheckedStmt = CheckedEmptyStmt
                  | CheckedExprStmt      CheckedExpr
-                 | CheckedCompoundStmt [[Info]] [CheckedStmt]
+                 | CheckedCompoundStmt [Info] [CheckedStmt]
                  | CheckedIfStmt       SourcePos CheckedExpr CheckedStmt CheckedStmt
                  | CheckedWhileStmt    SourcePos CheckedExpr CheckedStmt
                  | CheckedReturnStmt   SourcePos CheckedExpr
