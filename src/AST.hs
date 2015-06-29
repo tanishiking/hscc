@@ -6,14 +6,11 @@ type Program = [ExternalDeclaration]
 
 --type Identifier = String
 
-type Level = Integer
-
 type Identifier = String
 
 data ExternalDeclaration = Decl     SourcePos DeclaratorList
-                       --  | FuncProt SourcePos FunctionPrototype
-                         | FuncProt SourcePos Type Identifier DeclaratorList
-                         | FuncDef  SourcePos Type Identifier DeclaratorList Stmt
+                         | FuncProt SourcePos Type Identifier [(Type, Identifier)]
+                         | FuncDef  SourcePos Type Identifier [(Type,Identifier)] Stmt
                          deriving (Show)
 
 type DeclaratorList = [(Type, DirectDeclarator)]

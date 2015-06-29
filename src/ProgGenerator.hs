@@ -10,24 +10,16 @@ convProg (p:ps) = concat [convExDecl p, convProg ps]
 
 convExDecl :: ExternalDeclaration -> String
 convExDecl (Decl     _ declList) = convDeclList declList
-convExDecl (FuncProt _ funcProt) = convFuncProt funcProt ++ ";\n"
-convExDecl (FuncDef  _ funcDef)  = convFuncDef  funcDef
+convExDecl (FuncProt _ ty fname params) =
+  concat [show ty, show fname, "(", convParams params, ")", ";\n"]
+convExDecl (FuncDef  _ ty fname params stmt)  = 
+  concat [show ty, show fname, "(", convParams params, ")", "{\n", convStmt stmt, "}\n"]
 
 
 convDeclList :: DeclaratorList -> String
 convDeclList = concat . foldr f []
   where f (ty, directDecl) acc = (concat [show ty, show directDecl, ";\n"]):acc
 
-convFuncProt :: FunctionPrototype -> String
-convFuncProt (FunctionPrototype _ ty fname params) =
-  concat [show ty, show fname, "(", convParams params, ")"]
-
-convFuncDef :: FunctionDefinition -> String
-convFuncDef (FunctionDefinition _ ty fname params stmt) =
-  concat [show ty, show fname, "(", convParams params, ")", "{\n", convStmt stmt, "}\n"]
-
-
-{----------------------------------------------------------------}
 
 convParams :: [(Type, Identifier)] -> String
 convParams =

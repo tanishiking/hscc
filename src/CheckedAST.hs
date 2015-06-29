@@ -5,14 +5,14 @@ import Text.Parsec
 
 type CheckedProgram = [CheckedEDecl]
 
-data CheckedEDecl = CheckedDecl     SourcePos Info
-                  | CheckedFuncProt SourcePos Info [Info]
-                  | CheckedFuncDef  SourcePos Info [Info] CheckedStmt
+data CheckedEDecl = CheckedDecl     SourcePos [Info]
+                  | CheckedFuncProt SourcePos  Info  [Info]
+                  | CheckedFuncDef  SourcePos  Info  [Info] CheckedStmt
                   deriving (Show)
 
 data CheckedStmt = CheckedEmptyStmt
                  | CheckedExprStmt      CheckedExpr
-                 | CheckedCoupoundStmt [Info] [CheckedStmt]
+                 | CheckedCompoundStmt [[Info]] [CheckedStmt]
                  | CheckedIfStmt       SourcePos CheckedExpr CheckedStmt CheckedStmt
                  | CheckedWhileStmt    SourcePos CheckedExpr CheckedStmt
                  | CheckedReturnStmt   SourcePos CheckedExpr
