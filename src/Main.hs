@@ -15,7 +15,7 @@ run input =
   let prog = parseProgram input in
   case prog of
     Left  err -> err
-    Right val -> unlines . snd $ semanticCheck val
+    Right val -> show (fst $ semanticCheck val)
 
 
 main :: IO ()
