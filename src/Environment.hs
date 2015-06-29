@@ -67,8 +67,8 @@ collectExternalDecl (FuncDef pos ty name args stmt)
                                           else error $ concat [show pos, ": invalid decl,", name]
                      (Func, _, _)      -> error $ concat [show pos, ": invalid decl,", name]
                      _                 -> appendEnv globalLevel funcInfo
-      Nothing  -> appendEnv globalLevel funcInfo
-  
+--    Nothing  -> appendEnv globalLevel funcInfo
+      Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
 
 appendEnv :: Level -> Info -> StateEnv ()
 appendEnv level info = liftM (M.insertWith (++) level [info]) get >>= put
