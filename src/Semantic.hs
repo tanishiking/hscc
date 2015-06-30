@@ -9,13 +9,16 @@ import Text.Parsec
 import AST
 import CheckedAST
 import Environment
+import TypeCheck
 
 
 semanticCheck :: Program -> (CheckedProgram, [String])
 semanticCheck prog = runEnv body initialEnv
   where body = do collectGlobalDecl prog
                   ret <- checkProgram prog 
-                  return ret
+                  case typeCheck ret of
+                    (Left errMsg) -> error errMsg
+                    (Right _)     -> return ret
 
 
 checkProgram :: Program -> StateEnv CheckedProgram

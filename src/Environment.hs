@@ -16,14 +16,14 @@ type Level = Integer
 type Env = M.Map Level [Info]
 type Info = (Identifier, (Kind, ChType, Level))
 data Kind = Var | Func | FProt | Param
-          deriving (Show, Eq, Ord)
+          deriving (Show, Eq)
 
-data ChType = ChInt
-           | ChVoid
-           | ChName
-           | ChPointer ChType
-           | ChArray   ChType Integer
-           | ChFunc    ChType [ChType]
+data ChType = ChVoid
+            | ChInt
+            | ChName
+            | ChPointer ChType
+            | ChArray   ChType Integer
+            | ChFunc    ChType [ChType]
            deriving (Show, Eq, Ord)
 
 
