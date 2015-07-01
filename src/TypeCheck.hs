@@ -37,7 +37,7 @@ eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) args stmt) =
 
 stmtTypeCheck :: Info -> CheckedStmt -> Either String ChType
 stmtTypeCheck _ (CheckedEmptyStmt) = return ChVoid
-stmtTypeCheck _ (CheckedExprStmt e) = exprTypeCheck e
+stmtTypeCheck _ (CheckedExprStmt e) = exprTypeCheck e >> return ChVoid
 stmtTypeCheck info (CheckedCompoundStmt _ stmts) = do
   stmtsType <- mapM (stmtTypeCheck info) stmts
   return $ maximum stmtsType
@@ -151,6 +151,8 @@ checkAssignForm pos (CheckedIdentExpr _ (name, (kind, ty, _))) =
     (FProt, _)              -> fail $ concat [show pos, "invalid assignment to: ", show name] 
     (Param, _)              -> return ()
     (Param, (ChArray _ _ )) -> fail $ concat [show pos, "invalid assignment to: ", show name] 
+checkAssignForm pos (CheckedUnaryPointer _ e) = return ()
+checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form"]
 
 
 checkAddressRefer :: SourcePos -> CheckedExpr -> Either String ()
