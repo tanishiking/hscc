@@ -2,6 +2,7 @@ module TypeCheck where
 
 import Text.Parsec
 import Control.Monad
+import Debug.Trace
 
 import AST
 import CheckedAST
@@ -14,8 +15,8 @@ typeCheck = mapM_ eDeclTypeCheck
 getRetFuncType :: (Kind, ChType, Level) -> Maybe ChType
 getRetFuncType (k, t, l) =
   case t of
-  (ChFunc ct _) -> Just ct 
-  _             -> Nothing
+    (ChFunc ct _) -> Just ct 
+    _             -> Nothing
 
 
 eDeclTypeCheck :: CheckedEDecl -> Either String ()
@@ -30,8 +31,8 @@ eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) args stmt) =
                           (Right actType) -> 
                             if (expType == actType) 
                               then return () 
-                              else fail $ concat [show pos, "invalid type error: \n  Expected:", show expType, "\n  Actual:", show actType]
-      Nothing   -> fail $ concat [show pos, "invalid function return type"]
+                              else fail $ concat [show pos, " invalid type error: \n  Expected:", show expType, "\n  Actual:", show actType]
+      Nothing   -> fail $ concat [show pos, " invalid function return type", show (snd' finfo)]
 
 
 stmtTypeCheck :: Info -> CheckedStmt -> Either String ChType
@@ -57,11 +58,13 @@ stmtTypeCheck info (CheckedWhileStmt pos cond stmt) =
                      then fail $ concat [show pos, "invalid expression", show cond, " - it must be int"]
                      else stmtTypeCheck info stmt 
 stmtTypeCheck (fname, finfo) (CheckedReturnStmt pos e) =
-  let expectedType = snd' finfo in do
-    actualType <- exprTypeCheck e
-    if expectedType == actualType
-      then return actualType
-      else fail $ concat [show pos, "type mismatch \n  Expected: ", show expectedType, "\n  Actual: ", show actualType]
+  let maybeExpectedRetType = getRetFuncType finfo in do
+    case maybeExpectedRetType of
+      (Just expType) -> do actualType <- exprTypeCheck e
+                           if expType == actualType
+                             then return actualType
+                             else fail $ concat [show pos, "type mismatch \n  Expected: ", show expType, "\n  Actual: ", show actualType]
+      Nothing   -> fail $ concat [show pos, " invalid function return type", show (snd' finfo)]
 
 
 exprTypeCheck :: CheckedExpr -> Either String ChType
