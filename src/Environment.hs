@@ -20,11 +20,21 @@ data Kind = Var | Func | FProt | Param
 
 data ChType = ChVoid
             | ChInt
-            | ChName
             | ChPointer ChType
             | ChArray   ChType Integer
             | ChFunc    ChType [ChType]
-           deriving (Show, Eq, Ord)
+           deriving (Show, Ord)
+
+instance Eq ChType where
+  (==) ChVoid             ChVoid              = True
+  (==) ChInt              ChInt               = True
+  (==) (ChPointer ty1)    (ChPointer ty2)     = ty1 == ty2
+  (==) (ChArray ty1 _)    (ChArray ty2 _)     = ty1 == ty2
+  (==) (ChFunc ty1 args1) (ChFunc ty2 args2)  = ty1 == ty2 && args1 == args2
+  (==) (ChPointer ty1)  (ChArray ty2 _)       = ty1 == ty2
+  (==) (ChArray ty1 _)  (ChPointer ty2)       = ty1 == ty2
+  (==) _ _                                    = False
+
 
 
 globalLevel :: Level

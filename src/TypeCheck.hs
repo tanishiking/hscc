@@ -145,12 +145,12 @@ checkAddSub pos e1 e2 = do
 checkAssignForm :: SourcePos -> CheckedExpr -> Either String ()
 checkAssignForm pos (CheckedIdentExpr _ (name, (kind, ty, _))) =
   case (kind, ty) of
-    (Var, _)                -> return ()
     (Var, (ChArray _ _ ))   -> fail $ concat [show pos, "invalid assignment to: ", show name] 
+    (Var, _)                -> return ()
     (Func, _)               -> fail $ concat [show pos, "invalid assignment to: ", show name] 
     (FProt, _)              -> fail $ concat [show pos, "invalid assignment to: ", show name] 
-    (Param, _)              -> return ()
     (Param, (ChArray _ _ )) -> fail $ concat [show pos, "invalid assignment to: ", show name] 
+    (Param, _)              -> return ()
 checkAssignForm pos (CheckedUnaryPointer _ e) = return ()
 checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form"]
 
