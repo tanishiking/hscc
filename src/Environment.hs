@@ -76,12 +76,11 @@ collectExternalDecl (FuncDef pos ty name args stmt)
     maybeinfo <- findAtTheLevel globalLevel name
     case maybeinfo of
       (Just info) -> case info of
-                     (FProt, ty, _) -> if ty == (snd' . snd $ funcInfo)
+                     (FProt, ty, _) -> if ty == (getType . snd $ funcInfo)
                                           then appendEnv globalLevel funcInfo
                                           else error $ concat [show pos, ": invalid decl,", name]
-                     (Func, _, _)      -> error $ concat [show pos, ": invalid decl,", name]
-                     _                 -> appendEnv globalLevel funcInfo
---    Nothing  -> appendEnv globalLevel funcInfo
+                     (Func, _, _)   -> error $ concat [show pos, ": invalid decl,", name]
+                     _              -> appendEnv globalLevel funcInfo
       Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
 
 
@@ -98,7 +97,7 @@ appendWithDupCheck pos lev info =
   let name = fst info in do
     maybeInfo <- find lev name
     case maybeInfo of
-      (Just mInfo) -> if (trd' . snd $ mInfo) == paramLevel
+      (Just mInfo) -> if (getLevel . snd $ mInfo) == paramLevel
                       then (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv bodyLevel info
                       else error $ concat [show pos, "duplicate variable: ", show name]
       Nothing  -> appendEnv lev info
@@ -179,11 +178,11 @@ findOrErr pos lev name = do
     (Just info) -> return info
     Nothing     -> error $ concat [show pos, "undefined variable:", name]
 
-fst' :: (a, b, c) -> a
-fst' (a, b, c) = a
+getKind :: (Kind, ChType, Level) -> Kind
+getKind (kind, _, _) = kind
 
-snd' :: (a, b, c) -> b
-snd' (a, b, c) = b
+getType :: (Kind, ChType, Level) -> ChType
+getType (_, chType, _) = chType
 
-trd' :: (a, b, c) -> c
-trd' (a, b, c) = c
+getLevel :: (Kind, ChType, Level) -> Level
+getLevel (_, _, level) = level

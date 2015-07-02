@@ -32,7 +32,7 @@ eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) args stmt) =
                             if (expType == actType) 
                               then return () 
                               else fail $ concat [show pos, " invalid type error: \n  Expected:", show expType, "\n  Actual:", show actType]
-      Nothing   -> fail $ concat [show pos, " invalid function return type", show (snd' finfo)]
+      Nothing   -> fail $ concat [show pos, " invalid function return type", show (getType finfo)]
 
 
 stmtTypeCheck :: Info -> CheckedStmt -> Either String ChType
@@ -64,7 +64,7 @@ stmtTypeCheck (fname, finfo) (CheckedReturnStmt pos e) =
                            if expType == actualType
                              then return actualType
                              else fail $ concat [show pos, "type mismatch \n  Expected: ", show expType, "\n  Actual: ", show actualType]
-      Nothing   -> fail $ concat [show pos, " invalid function return type", show (snd' finfo)]
+      Nothing   -> fail $ concat [show pos, " invalid function return type", show (getType finfo)]
 
 
 exprTypeCheck :: CheckedExpr -> Either String ChType
@@ -107,7 +107,7 @@ exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
                                           else fail $ concat [show pos, "type mismatch in func params\n  Expected: ", show paramTypes, "\n  Actual: ", show argTypes]
 exprTypeCheck (CheckedExprList pos exprs) = liftM last (mapM exprTypeCheck exprs)
 exprTypeCheck (CheckedConstant pos num) = return ChInt
-exprTypeCheck (CheckedIdentExpr pos (name, info)) = return $ snd' info
+exprTypeCheck (CheckedIdentExpr pos (name, info)) = return $ getType info
 
 
 

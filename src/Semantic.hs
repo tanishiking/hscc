@@ -42,14 +42,14 @@ checkExFuncProt pos ty name params =
   return $ CheckedFuncProt pos fInfo paramsInfo
     where
       paramsInfo = map (makeParamInfo pos ) params
-      paramsType = map (snd' . snd) paramsInfo
+      paramsType = map (getType . snd) paramsInfo
       fInfo    = (name, (FProt, ChFunc (convType ty) paramsType, globalLevel))
 
 
 checkExFuncDef :: SourcePos -> Type -> Identifier -> [(Type, Identifier)] -> Stmt -> StateEnv CheckedEDecl
 checkExFuncDef pos ty name params body =
   let paramsInfo = map (makeParamInfo pos) params
-      paramsType = map (snd' . snd) paramsInfo
+      paramsType = map (getType . snd) paramsInfo
       cbody      = checkStmt paramLevel body
       fInfo      =  (name, (Func, ChFunc (convType ty) paramsType, globalLevel)) in do
   levCheckedBody <- withNewEnv paramLevel
