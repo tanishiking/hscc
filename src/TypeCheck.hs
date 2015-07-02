@@ -102,9 +102,9 @@ exprTypeCheck (CheckedUnaryPointer pos e) = do
 exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
   argTypes <- mapM exprTypeCheck args
   case (snd $ funcInfo) of
-    (Func, ChFunc ty paramsTypes, _) -> if argTypes == paramsTypes
+    (Func, ChFunc ty paramTypes, _) -> if argTypes == paramTypes
                                           then return ty
-                                          else fail $ concat [show pos, "type mismatch in func params"]
+                                          else fail $ concat [show pos, "type mismatch in func params\n  Expected: ", show paramTypes, "\n  Actual: ", show argTypes]
 exprTypeCheck (CheckedExprList pos exprs) = liftM last (mapM exprTypeCheck exprs)
 exprTypeCheck (CheckedConstant pos num) = return ChInt
 exprTypeCheck (CheckedIdentExpr pos (name, info)) = return $ snd' info
