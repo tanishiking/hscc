@@ -53,7 +53,7 @@ stmtTypeCheck info (CheckedIfStmt pos cond true false) =
 stmtTypeCheck info (CheckedWhileStmt pos cond stmt) =
   let eitherExprTy = exprTypeCheck cond in
   case eitherExprTy of
-  (Left err)     -> fail err
+  (Left err)    -> fail err
   (Right expTy) -> if expTy /= ChInt
                      then fail $ concat [show pos, "invalid expression", show cond, " - it must be int"]
                      else stmtTypeCheck info stmt 
@@ -75,18 +75,18 @@ exprTypeCheck (CheckedAssignExpr pos e1 e2) = do
   if ty1 == ty2 
     then return ty1
     else fail $ concat [show pos, "type mismatch", show ty1, " and ", show ty2]
-exprTypeCheck (CheckedOr pos e1 e2) = checkBothInt pos e1 e2
-exprTypeCheck (CheckedAnd pos e1 e2) = checkBothInt pos e1 e2
-exprTypeCheck (CheckedEqual pos e1 e2) = checkCompare pos e1 e2
+exprTypeCheck (CheckedOr pos e1 e2)       = checkBothInt pos e1 e2
+exprTypeCheck (CheckedAnd pos e1 e2)      = checkBothInt pos e1 e2
+exprTypeCheck (CheckedEqual pos e1 e2)    = checkCompare pos e1 e2
 exprTypeCheck (CheckedNotEqual pos e1 e2) = checkCompare pos e1 e2
-exprTypeCheck (CheckedLt pos e1 e2) = checkCompare pos e1 e2
-exprTypeCheck (CheckedGt pos e1 e2) = checkCompare pos e1 e2
-exprTypeCheck (CheckedLte pos e1 e2) = checkCompare pos e1 e2
-exprTypeCheck (CheckedGte pos e1 e2) = checkCompare pos e1 e2
-exprTypeCheck (CheckedPlus pos e1 e2) = checkAddSub pos e1 e2
-exprTypeCheck (CheckedMinus pos e1 e2) = checkAddSub pos e1 e2
+exprTypeCheck (CheckedLt pos e1 e2)       = checkCompare pos e1 e2
+exprTypeCheck (CheckedGt pos e1 e2)       = checkCompare pos e1 e2
+exprTypeCheck (CheckedLte pos e1 e2)      = checkCompare pos e1 e2
+exprTypeCheck (CheckedGte pos e1 e2)      = checkCompare pos e1 e2
+exprTypeCheck (CheckedPlus pos e1 e2)     = checkAddSub pos e1 e2
+exprTypeCheck (CheckedMinus pos e1 e2)    = checkAddSub pos e1 e2
 exprTypeCheck (CheckedMultiple pos e1 e2) = checkBothInt pos e1 e2
-exprTypeCheck (CheckedDevide pos e1 e2) = checkBothInt pos e1 e2
+exprTypeCheck (CheckedDevide pos e1 e2)   = checkBothInt pos e1 e2
 exprTypeCheck (CheckedUnaryAddress pos e) = do
   checkAddressRefer pos e
   ty <- exprTypeCheck e
@@ -105,8 +105,8 @@ exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
     (Func, ChFunc ty paramTypes, _) -> if argTypes == paramTypes
                                           then return ty
                                           else fail $ concat [show pos, "type mismatch in func params\n  Expected: ", show paramTypes, "\n  Actual: ", show argTypes]
-exprTypeCheck (CheckedExprList pos exprs) = liftM last (mapM exprTypeCheck exprs)
-exprTypeCheck (CheckedConstant pos num) = return ChInt
+exprTypeCheck (CheckedExprList pos exprs)         = liftM last (mapM exprTypeCheck exprs)
+exprTypeCheck (CheckedConstant pos num)           = return ChInt
 exprTypeCheck (CheckedIdentExpr pos (name, info)) = return $ getType info
 
 
