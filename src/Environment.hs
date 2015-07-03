@@ -16,15 +16,25 @@ type Level = Integer
 type Env = M.Map Level [Info]
 type Info = (Identifier, (Kind, ChType, Level))
 data Kind = Var | Func | FProt | Param
-          deriving (Show, Eq, Ord)
+          deriving (Show, Eq)
 
-data ChType = ChInt
-           | ChVoid
-           | ChName
-           | ChPointer ChType
-           | ChArray   ChType Integer
-           | ChFunc    ChType [ChType]
-           deriving (Show, Eq, Ord)
+data ChType = ChVoid
+            | ChInt
+            | ChPointer ChType
+            | ChArray   ChType Integer
+            | ChFunc    ChType [ChType]
+           deriving (Show, Ord)
+
+instance Eq ChType where
+  (==) ChVoid             ChVoid             = True
+  (==) ChInt              ChInt              = True
+  (==) (ChPointer ty1)    (ChPointer ty2)    = ty1 == ty2
+  (==) (ChArray ty1 _)    (ChArray ty2 _)    = ty1 == ty2
+  (==) (ChFunc ty1 args1) (ChFunc ty2 args2) = ty1 == ty2 && args1 == args2
+  (==) (ChPointer ty1)  (ChArray ty2 _)      = ty1 == ty2
+  (==) (ChArray ty1 _)  (ChPointer ty2)      = ty1 == ty2
+  (==) _ _                                   = False
+
 
 
 globalLevel :: Level
@@ -66,12 +76,11 @@ collectExternalDecl (FuncDef pos ty name args stmt)
     maybeinfo <- findAtTheLevel globalLevel name
     case maybeinfo of
       (Just info) -> case info of
-                     (FProt, ty, _) -> if ty == (snd' . snd $ funcInfo)
+                     (FProt, ty, _) -> if ty == (getType . snd $ funcInfo)
                                           then appendEnv globalLevel funcInfo
                                           else error $ concat [show pos, ": invalid decl,", name]
-                     (Func, _, _)      -> error $ concat [show pos, ": invalid decl,", name]
-                     _                 -> appendEnv globalLevel funcInfo
---    Nothing  -> appendEnv globalLevel funcInfo
+                     (Func, _, _)   -> error $ concat [show pos, ": invalid decl,", name]
+                     _              -> appendEnv globalLevel funcInfo
       Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
 
 
@@ -88,7 +97,7 @@ appendWithDupCheck pos lev info =
   let name = fst info in do
     maybeInfo <- find lev name
     case maybeInfo of
-      (Just mInfo) -> if (trd' . snd $ mInfo) == paramLevel
+      (Just mInfo) -> if (getLevel . snd $ mInfo) == paramLevel
                       then (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv bodyLevel info
                       else error $ concat [show pos, "duplicate variable: ", show name]
       Nothing  -> appendEnv lev info
@@ -169,11 +178,11 @@ findOrErr pos lev name = do
     (Just info) -> return info
     Nothing     -> error $ concat [show pos, "undefined variable:", name]
 
-fst' :: (a, b, c) -> a
-fst' (a, b, c) = a
+getKind :: (Kind, ChType, Level) -> Kind
+getKind (kind, _, _) = kind
 
-snd' :: (a, b, c) -> b
-snd' (a, b, c) = b
+getType :: (Kind, ChType, Level) -> ChType
+getType (_, chType, _) = chType
 
-trd' :: (a, b, c) -> c
-trd' (a, b, c) = c
+getLevel :: (Kind, ChType, Level) -> Level
+getLevel (_, _, level) = level
