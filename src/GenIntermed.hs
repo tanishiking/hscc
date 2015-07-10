@@ -27,10 +27,10 @@ genFreshVar = do
   case reusables of
     []     -> do put ([], varnum+1) 
                  return ("tmp" ++ show varnum,
-                         (Var, ChVoid, globalLevel))
+                         (Var, ChTmp, globalLevel))
     (n:ns) -> do put (ns, varnum) -- 再利用可能な変数を使う
                  return ("tmp" ++ show n,
-                         (Var, ChVoid, globalLevel))
+                         (Var, ChTmp, globalLevel))
 
 {-=========================================
  -      intermed expression converter
@@ -105,7 +105,7 @@ intermedExpr (CheckedUnaryAddress _ e) = do
   (vars, stmts) <- intermedExpr e
   return (dest:vars, stmts ++ [ILetStmt dest (IAddrExpr (result vars))])
 intermedExpr (CheckedCallFunc _ func args) = do
-  res <- trace (show args) mapM intermedExpr args
+  res <- mapM intermedExpr args
   if fst func == "print"
     then let [(vars, stmts)] = res in
          return (vars, stmts ++ [IPrintStmt $ result vars])

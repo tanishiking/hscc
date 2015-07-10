@@ -23,6 +23,7 @@ data ChType = ChVoid
             | ChPointer ChType
             | ChArray   ChType Integer
             | ChFunc    ChType [ChType]
+            | ChTmp
            deriving (Show, Ord)
 
 instance Eq ChType where
