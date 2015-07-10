@@ -4,6 +4,8 @@ import Intermed
 import CheckedAST
 import Environment
 
+import Debug.Trace
+
 import Control.Monad.State.Strict
 
 type VarNum   = Int
@@ -103,23 +105,23 @@ intermedExpr (CheckedUnaryAddress _ e) = do
   (vars, stmts) <- intermedExpr e
   return (dest:vars, stmts ++ [ILetStmt dest (IAddrExpr (result vars))])
 intermedExpr (CheckedCallFunc _ func args) = do
-  [(vars, stmts)] <- mapM intermedExpr args
+  res <- trace (show args) mapM intermedExpr args
   if fst func == "print"
-  then return (vars, stmts ++ [IPrintStmt $ result vars])
-  else let argVars    = vars
-           argStmts   = stmts in do
-       dest <- genFreshVar
-       return (dest:argVars,
-               argStmts ++ [ICallStmt dest func argVars])
+    then let [(vars, stmts)] = res in
+         return (vars, stmts ++ [IPrintStmt $ result vars])
+    else let resArgs  = map (head . fst) res
+             resVars  = concat $ map fst res
+             resStmts = concat $ map snd res in do
+         dest <- genFreshVar
+         return (dest:resVars,
+                 resStmts ++ [ICallStmt dest func resArgs])
 intermedExpr (CheckedExprList _ exprs) = do
   [(vars, stmts)] <- mapM intermedExpr exprs
-  return (reverse $ vars, stmts)
+  return (vars, stmts)
 intermedExpr (CheckedConstant _ num) = do
   dest <- genFreshVar
   return ([dest], [ILetStmt dest (IIntExpr num)])
 intermedExpr (CheckedIdentExpr _ ident) = return ([ident], [])
-
-
 
 
 intermedOrExpr :: CheckedExpr -> CheckedExpr -> VarEnv ([IVar], [IStmt])
