@@ -8,6 +8,7 @@ import AST
 import Parser
 import ProgGenerator
 import Semantic
+import GenIntermed
 
 
 run :: String -> String
@@ -15,7 +16,7 @@ run input =
   let prog = parseProgram input in
   case prog of
     Left  err -> err
-    Right val -> (show . fst $ sval) ++ "\n" ++ (concat . snd $ sval)
+    Right val -> (show $ intermedProgram $ fst $ sval) ++ "\n" ++ (concat . snd $ sval)
                    where sval = semanticCheck val
 
 
