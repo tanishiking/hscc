@@ -133,10 +133,10 @@ checkExpr lev (Multiple pos e1 e2) = do
   cexpr1 <- checkExpr lev e1
   cexpr2 <- checkExpr lev e2
   return $ CheckedMultiple pos cexpr1 cexpr2
-checkExpr lev (Devide pos e1 e2) = do
+checkExpr lev (Divide pos e1 e2) = do
   cexpr1 <- checkExpr lev e1
   cexpr2 <- checkExpr lev e2
-  return $ CheckedDevide pos cexpr1 cexpr2
+  return $ CheckedDivide pos cexpr1 cexpr2
 checkExpr lev (UnaryAddress pos e) = do
   cexpr <- checkExpr lev e
   return $ CheckedUnaryAddress pos cexpr

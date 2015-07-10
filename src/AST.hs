@@ -65,7 +65,7 @@ data Expr = AssignExpr   SourcePos Expr        Expr
           | Plus         SourcePos Expr        Expr
           | Minus        SourcePos Expr        Expr
           | Multiple     SourcePos Expr        Expr
-          | Devide       SourcePos Expr        Expr
+          | Divide       SourcePos Expr        Expr
           | UnaryAddress SourcePos Expr   
           | UnaryPointer SourcePos Expr
           | CallFunc     SourcePos Identifier [Expr]

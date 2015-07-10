@@ -248,7 +248,7 @@ logicalOrExpr =  buildExpressionParser table unaryExpr
  - ========================= -}
 
 table :: [[Operator String () Identity Expr]]
-table = [[op "*"  Multiple AssocLeft, op "/"  Devide   AssocLeft]
+table = [[op "*"  Multiple AssocLeft, op "/"  Divide   AssocLeft]
         ,[op "+"  Plus     AssocLeft, op "-"  Minus    AssocLeft]
         ,[op "<"  Lt       AssocLeft, op ">"  Gt       AssocLeft,
           op "<=" Lte      AssocLeft, op ">=" Gte      AssocLeft]

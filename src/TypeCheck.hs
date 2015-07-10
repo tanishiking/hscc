@@ -86,7 +86,7 @@ exprTypeCheck (CheckedGte pos e1 e2)      = checkCompare pos e1 e2
 exprTypeCheck (CheckedPlus pos e1 e2)     = checkAddSub pos e1 e2
 exprTypeCheck (CheckedMinus pos e1 e2)    = checkAddSub pos e1 e2
 exprTypeCheck (CheckedMultiple pos e1 e2) = checkBothInt pos e1 e2
-exprTypeCheck (CheckedDevide pos e1 e2)   = checkBothInt pos e1 e2
+exprTypeCheck (CheckedDivide pos e1 e2)   = checkBothInt pos e1 e2
 exprTypeCheck (CheckedUnaryAddress pos e) = do
   checkAddressRefer pos e
   ty <- exprTypeCheck e

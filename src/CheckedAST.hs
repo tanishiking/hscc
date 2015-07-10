@@ -31,7 +31,7 @@ data CheckedExpr = CheckedAssignExpr   SourcePos CheckedExpr CheckedExpr
                  | CheckedPlus         SourcePos CheckedExpr CheckedExpr
                  | CheckedMinus        SourcePos CheckedExpr CheckedExpr
                  | CheckedMultiple     SourcePos CheckedExpr CheckedExpr
-                 | CheckedDevide       SourcePos CheckedExpr CheckedExpr
+                 | CheckedDivide       SourcePos CheckedExpr CheckedExpr
                  | CheckedUnaryAddress SourcePos CheckedExpr
                  | CheckedUnaryPointer SourcePos CheckedExpr
                  | CheckedCallFunc     SourcePos Info        [CheckedExpr]
