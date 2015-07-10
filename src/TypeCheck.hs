@@ -21,7 +21,7 @@ getRetFuncType (k, t, l) =
 
 eDeclTypeCheck :: CheckedEDecl -> Either String ()
 eDeclTypeCheck (CheckedDecl _ _) = return ()
-eDeclTypeCheck (CheckedFuncProt pos info args) = return ()
+--eDeclTypeCheck (CheckedFuncProt pos info args) = return ()
 eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) args stmt) =
   let maybeExpectedRetType = getRetFuncType finfo in do
     case maybeExpectedRetType of

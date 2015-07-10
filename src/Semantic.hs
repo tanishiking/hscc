@@ -22,31 +22,31 @@ semanticCheck prog = runEnv body initialEnv
 
 
 checkProgram :: Program -> StateEnv CheckedProgram
-checkProgram = mapM checkExternalDecl
+checkProgram prog = liftM concat $ mapM checkExternalDecl prog
 
 
-checkExternalDecl :: ExternalDeclaration -> StateEnv CheckedEDecl 
+checkExternalDecl :: ExternalDeclaration -> StateEnv [CheckedEDecl]
 checkExternalDecl (Decl pos declarators)            = checkExDeclarators pos declarators
-checkExternalDecl (FuncProt pos ty name params)     = checkExFuncProt    pos ty name params
+checkExternalDecl (FuncProt pos ty name params)     = return []
 checkExternalDecl (FuncDef pos ty name params stmt) = checkExFuncDef     pos ty name params stmt
 
 
-checkExDeclarators :: SourcePos -> DeclaratorList -> StateEnv CheckedEDecl
-checkExDeclarators pos declarators = return $ CheckedDecl pos info 
+checkExDeclarators :: SourcePos -> DeclaratorList -> StateEnv [CheckedEDecl]
+checkExDeclarators pos declarators = return [CheckedDecl pos info]
   where
     info = map (makeVarInfo pos globalLevel) declarators
 
-
+{-
 checkExFuncProt :: SourcePos -> Type -> Identifier -> [(Type, Identifier)] -> StateEnv CheckedEDecl
 checkExFuncProt pos ty name params =
   return $ CheckedFuncProt pos fInfo paramsInfo
     where
       paramsInfo = map (makeParamInfo pos ) params
       paramsType = map (getType . snd) paramsInfo
-      fInfo    = (name, (FProt, ChFunc (convType ty) paramsType, globalLevel))
+      fInfo      = (name, (FProt, ChFunc (convType ty) paramsType, globalLevel))
+-}
 
-
-checkExFuncDef :: SourcePos -> Type -> Identifier -> [(Type, Identifier)] -> Stmt -> StateEnv CheckedEDecl
+checkExFuncDef :: SourcePos -> Type -> Identifier -> [(Type, Identifier)] -> Stmt -> StateEnv [CheckedEDecl]
 checkExFuncDef pos ty name params body =
   let paramsInfo = map (makeParamInfo pos) params
       paramsType = map (getType . snd) paramsInfo
@@ -55,7 +55,7 @@ checkExFuncDef pos ty name params body =
   levCheckedBody <- withNewEnv paramLevel
                                (mapM_ (appendWithDupCheck pos paramLevel) paramsInfo)
                                cbody
-  return $ CheckedFuncDef pos fInfo paramsInfo levCheckedBody
+  return [CheckedFuncDef pos fInfo paramsInfo levCheckedBody]
 
 
 checkStmt :: Level -> Stmt -> StateEnv CheckedStmt

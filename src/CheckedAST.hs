@@ -6,7 +6,7 @@ import Text.Parsec
 type CheckedProgram = [CheckedEDecl]
 
 data CheckedEDecl = CheckedDecl     SourcePos [Info]
-                  | CheckedFuncProt SourcePos  Info  [Info]
+--                | CheckedFuncProt SourcePos  Info  [Info]
                   | CheckedFuncDef  SourcePos  Info  [Info] CheckedStmt
                   deriving (Show)
 
