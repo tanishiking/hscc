@@ -26,11 +26,11 @@ genFreshVar = do
   (reusables, varnum) <- get
   case reusables of
     []     -> do put ([], varnum+1) 
-                 return ("tmp" ++ show varnum,
-                         (Var, ChTmp, globalLevel))
+                 return $ VarInfo ("tmp" ++ show varnum,
+                                   (Var, ChTmp, globalLevel))
     (n:ns) -> do put (ns, varnum) -- 再利用可能な変数を使う
-                 return ("tmp" ++ show n,
-                         (Var, ChTmp, globalLevel))
+                 return $ VarInfo ("tmp" ++ show n,
+                                   (Var, ChTmp, globalLevel))
 
 {-=========================================
  -      intermed expression converter
@@ -40,11 +40,13 @@ intermedProgram :: CheckedProgram -> IProgram
 intermedProgram prog = runVarEnv $ mapM intermedExDecl prog
 
 intermedExDecl :: CheckedEDecl -> VarEnv IExDecl
-intermedExDecl (CheckedDecl _ vars) = return $ IDecl vars
+intermedExDecl (CheckedDecl _ vars) = return $ IDecl (map VarInfo vars)
 --intermedExDecl (CheckedFuncProt _ _ _) = return ()
-intermedExDecl (CheckedFuncDef _ finfo args body) = do
-  (vars, stmts) <- intermedStmt body
-  return $ IFuncDef finfo args (ICompoundStmt [] stmts)
+intermedExDecl (CheckedFuncDef _ finfo args body) = 
+  let finfo' = VarInfo finfo
+      args'  = map VarInfo args in do
+    (vars, stmts) <- intermedStmt body
+    return $ IFuncDef finfo' args' (ICompoundStmt [] stmts)
 
 
 intermedStmt :: CheckedStmt -> VarEnv ([IVar], [IStmt])
@@ -54,7 +56,8 @@ intermedStmt (CheckedCompoundStmt decls stmts) = do
   istmts <- mapM intermedStmt stmts
   let varsComp  = concat $ map fst istmts
       stmtsComp = concat $ map snd istmts
-  return (varsComp, [ICompoundStmt decls stmtsComp])
+      decls'    = map VarInfo decls
+  return (varsComp, [ICompoundStmt decls' stmtsComp])
 intermedStmt (CheckedIfStmt _ cond true false) = do
   (varsCond, stmtCond)   <- intermedExpr cond
   (varsTrue, stmtTrue)   <- intermedStmt true
@@ -83,7 +86,7 @@ intermedExpr (CheckedAssignExpr _ dest src) =
     (CheckedIdentExpr _ varDst) -> do
       (varsSrc, stmtSrc) <- intermedExpr src
       return (varsSrc,
-              stmtSrc ++ [ILetStmt varDst (IVarExpr $ result varsSrc)])
+              stmtSrc ++ [ILetStmt (VarInfo varDst) (IVarExpr $ result varsSrc)])
 intermedExpr (CheckedOr _ e1 e2)       = intermedOrExpr e1 e2
 intermedExpr (CheckedAnd _ e1 e2)      = intermedAndExpr e1 e2
 intermedExpr (CheckedEqual _ e1 e2)    = intermedRelopExpr "=" e1 e2
@@ -103,7 +106,8 @@ intermedExpr (CheckedUnaryPointer _ e) = do
 intermedExpr (CheckedUnaryAddress _ e) = do
   dest <- genFreshVar
   (vars, stmts) <- intermedExpr e
-  return (dest:vars, stmts ++ [ILetStmt dest (IAddrExpr (result vars))])
+  return (dest:vars, stmts ++ [ILetStmt dest 
+                                        (IAddrExpr (result vars))])
 intermedExpr (CheckedCallFunc _ func args) = do
   res <- mapM intermedExpr args
   if fst func == "print"
@@ -121,7 +125,7 @@ intermedExpr (CheckedExprList _ exprs) = do
 intermedExpr (CheckedConstant _ num) = do
   dest <- genFreshVar
   return ([dest], [ILetStmt dest (IIntExpr num)])
-intermedExpr (CheckedIdentExpr _ ident) = return ([ident], [])
+intermedExpr (CheckedIdentExpr _ ident) = return ([VarInfo ident], [])
 
 
 intermedOrExpr :: CheckedExpr -> CheckedExpr -> VarEnv ([IVar], [IStmt])

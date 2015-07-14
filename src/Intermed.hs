@@ -2,9 +2,21 @@ module Intermed where
 
 import Environment
 
-type IProgram = [IExDecl]
+type FpAddr = Int
+type GpAddr = Int
+type SpAddr = Int
 
-type IVar = Info
+data Address = Fp  Int
+             | Gp  Int
+             | Reg Int
+             deriving (Show)
+
+type IVarAddr = Address
+
+type IProgram = [IExDecl]
+data IVar = VarInfo Info
+          | VarAddr IVarAddr
+          deriving (Show)
 
 data IExDecl = IDecl    [IVar]
              | IFuncDef IVar [IVar] IStmt
