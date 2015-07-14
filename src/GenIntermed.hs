@@ -46,7 +46,8 @@ intermedExDecl (CheckedFuncDef _ finfo args body) =
   let finfo' = VarInfo finfo
       args'  = map VarInfo args in do
     (vars, stmts) <- intermedStmt body
-    return $ IFuncDef finfo' args' (ICompoundStmt [] stmts)
+    return $ IFuncDef finfo' args' (head stmts)
+    -- どうせ関数定義のstmtsは[ICompoundStmt]
 
 
 intermedStmt :: CheckedStmt -> VarEnv ([IVar], [IStmt])
