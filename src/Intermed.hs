@@ -9,14 +9,14 @@ type SpAddr = Int
 data Address = Fp  Int
              | Gp  Int
              | Reg Int
-             deriving (Show)
+             deriving (Show, Eq)
 
 type IVarAddr = Address
 
 type IProgram = [IExDecl]
 data IVar = VarInfo Info
           | VarAddr IVarAddr
-          deriving (Show)
+          deriving (Show, Eq)
 
 data IExDecl = IDecl    [IVar]
              | IFuncDef IVar [IVar] IStmt
