@@ -3,14 +3,13 @@ module AssignAddr where
 import Intermed
 import Environment
 
+import Debug.Trace
+import Data.Maybe
 import Control.Monad.State
 
 type AddrEnv = State (FpAddr, GpAddr, [(IVar, IVarAddr)])
 
 
-getTypeFromIVar :: IVar -> ChType
-getTypeFromIVar (VarInfo (_, (_, ty, _))) = ty
-getTypeFromIVar _ = ChVoid
 
 
 getFpAddr :: Address -> Int
@@ -77,6 +76,12 @@ getFp = do
   return fp
 
 
+getAddr :: IVar -> AddrEnv IVar
+getAddr ivar = do
+  (fp, gp, vars) <- get
+  return $ VarAddr (fromJust $ lookup ivar vars)
+
+
 {-===============================
  -       Assign Address
  -===============================-}
@@ -107,6 +112,10 @@ assignIExDecl (IFuncDef func args body) = do
 
 assignIStmt :: IStmt -> AddrEnv IStmt
 assignIStmt (IEmptyStmt) = return IEmptyStmt
+assignIStmt (ILetStmt dest src) = liftM2 ILetStmt (getAddr dest) (assignIExpr src)
+assignIStmt (IWriteStmt dest src) = liftM2 IWriteStmt (getAddr dest) (getAddr src)
+assignIStmt (IReadStmt dest src) = liftM2 IReadStmt (getAddr dest) (getAddr src)
+assignIStmt (IReturnStmt var) = liftM IReturnStmt (getAddr var)
 assignIStmt (ICompoundStmt decls stmts) = do
   fp <- getFp
   let requiredWords = map (calcWords . getTypeFromIVar) decls
@@ -115,3 +124,11 @@ assignIStmt (ICompoundStmt decls stmts) = do
   stmts' <- mapM assignIStmt stmts
   resetFp fp
   return $ ICompoundStmt (map VarAddr declsAddress) stmts'
+
+
+assignIExpr :: IExpr -> AddrEnv IExpr
+assignIExpr (IVarExpr var)            = liftM IVarExpr (getAddr var)
+assignIExpr (IIntExpr num)            = return $ IIntExpr num
+assignIExpr (IAopExpr op var1 var2)   = liftM2 (IAopExpr op) (getAddr var1) (getAddr var2)
+assignIExpr (IRelopExpr op var1 var2) = liftM2 (IRelopExpr op) (getAddr var1) (getAddr var2)
+assignIExpr (IAddrExpr var)           = liftM IAddrExpr (getAddr var)
