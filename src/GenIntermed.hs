@@ -50,15 +50,19 @@ intermedExDecl (CheckedFuncDef _ finfo args body) =
     -- どうせ関数定義のstmtsは[ICompoundStmt]
 
 
+includeTmpVars :: ([IVar], [IStmt]) -> CheckedStmt -> VarEnv ([IVar], [IStmt])
+includeTmpVars (idecls, istmts) stmt = do
+  (vars, stmts) <- intermedStmt stmt
+  return (idecls ++ vars, istmts ++ stmts)
+
+
 intermedStmt :: CheckedStmt -> VarEnv ([IVar], [IStmt])
 intermedStmt (CheckedEmptyStmt) = return ([], [IEmptyStmt])
 intermedStmt (CheckedExprStmt e) = intermedExpr e
 intermedStmt (CheckedCompoundStmt decls stmts) = do
-  istmts <- mapM intermedStmt stmts
-  let varsComp  = concat $ map fst istmts
-      stmtsComp = concat $ map snd istmts
-      decls'    = map VarInfo decls
-  return (varsComp, [ICompoundStmt decls' stmtsComp])
+  (idecls, istmts) <- foldM includeTmpVars ([], []) stmts
+  let decls'    = map VarInfo decls
+  return ([], [ICompoundStmt (decls' ++ idecls) istmts])
 intermedStmt (CheckedIfStmt _ cond true false) = do
   (varsCond, stmtCond)   <- intermedExpr cond
   (varsTrue, stmtTrue)   <- intermedStmt true
