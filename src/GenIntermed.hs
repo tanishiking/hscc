@@ -53,7 +53,12 @@ intermedExDecl (CheckedFuncDef _ finfo args body) =
 includeTmpVars :: ([IVar], [IStmt]) -> CheckedStmt -> VarEnv ([IVar], [IStmt])
 includeTmpVars (idecls, istmts) stmt = do
   (vars, stmts) <- intermedStmt stmt
-  return (idecls ++ vars, istmts ++ stmts)
+  return (idecls ++ (onlyTmps vars), istmts ++ stmts)
+  -- 一時変数以外は二重宣言されてしまうので
+
+
+onlyTmps :: [IVar] -> [IVar]
+onlyTmps = filter ((== ChTmp) . getTypeFromIVar)
 
 
 intermedStmt :: CheckedStmt -> VarEnv ([IVar], [IStmt])

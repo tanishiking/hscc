@@ -2,6 +2,10 @@ module Intermed where
 
 import Environment
 
+getTypeFromIVar :: IVar -> ChType
+getTypeFromIVar (VarInfo (_, (_, ty, _))) = ty
+getTypeFromIVar _ = ChVoid
+
 type FpAddr = Int
 type GpAddr = Int
 type SpAddr = Int
