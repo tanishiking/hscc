@@ -8,7 +8,6 @@ getTypeFromIVar _ = ChVoid
 
 type FpAddr = Int
 type GpAddr = Int
-type SpAddr = Int
 
 data Address = Fp  Int
              | Gp  Int
@@ -44,4 +43,3 @@ data IExpr = IVarExpr   IVar
            | IRelopExpr String IVar IVar --op compare
            | IAddrExpr  IVar
            deriving (Show)
-

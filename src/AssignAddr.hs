@@ -111,11 +111,15 @@ assignIExDecl (IFuncDef func args body) = do
 
 
 assignIStmt :: IStmt -> AddrEnv IStmt
-assignIStmt (IEmptyStmt) = return IEmptyStmt
-assignIStmt (ILetStmt dest src) = liftM2 ILetStmt (getAddr dest) (assignIExpr src)
-assignIStmt (IWriteStmt dest src) = liftM2 IWriteStmt (getAddr dest) (getAddr src)
-assignIStmt (IReadStmt dest src) = liftM2 IReadStmt (getAddr dest) (getAddr src)
-assignIStmt (IReturnStmt var) = liftM IReturnStmt (getAddr var)
+assignIStmt (IEmptyStmt)                = return IEmptyStmt
+assignIStmt (ILetStmt dest src)         = liftM2 ILetStmt   (getAddr dest) (assignIExpr src)
+assignIStmt (IWriteStmt dest src)       = liftM2 IWriteStmt (getAddr dest) (getAddr src)
+assignIStmt (IReadStmt dest src)        = liftM2 IReadStmt  (getAddr dest) (getAddr src)
+assignIStmt (IIfStmt cond true false)   = liftM3 IIfStmt    (getAddr cond) (mapM assignIStmt true) (mapM assignIStmt false)
+assignIStmt (IWhileStmt cond body)      = liftM2 IWhileStmt (getAddr cond) (mapM assignIStmt body)
+assignIStmt (ICallStmt dest func args)  = liftM3 ICallStmt  (getAddr dest) (return func) (mapM getAddr args)
+assignIStmt (IReturnStmt var)           = liftM IReturnStmt (getAddr var)
+assignIStmt (IPrintStmt var)            = liftM IPrintStmt  (getAddr var)
 assignIStmt (ICompoundStmt decls stmts) = do
   fp <- getFp
   let requiredWords = map (calcWords . getTypeFromIVar) decls
