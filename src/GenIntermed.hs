@@ -82,7 +82,7 @@ intermedStmt (CheckedWhileStmt _ cond body) = do
   (varsCond, stmtCond) <- intermedExpr cond
   (varsBody, stmtBody) <- intermedStmt body
   return (varsCond ++ varsBody,
-          stmtCond ++ [IWhileStmt (result varsCond) stmtBody])
+          stmtCond ++ [IWhileStmt (result varsCond) (stmtBody ++ stmtCond)])
 intermedStmt (CheckedReturnStmt _ expr) = do
   (varsReturn, stmtReturn) <- intermedExpr expr
   return (varsReturn, stmtReturn ++ [IReturnStmt $ result varsReturn])
@@ -103,7 +103,7 @@ intermedExpr (CheckedAssignExpr _ pdest src) =
               stmtSrc ++ [ILetStmt (VarInfo varDst) (IVarExpr $ result varsSrc)])
 intermedExpr (CheckedOr _ e1 e2)       = intermedOrExpr e1 e2
 intermedExpr (CheckedAnd _ e1 e2)      = intermedAndExpr e1 e2
-intermedExpr (CheckedEqual _ e1 e2)    = intermedRelopExpr "=" e1 e2
+intermedExpr (CheckedEqual _ e1 e2)    = intermedRelopExpr "==" e1 e2
 intermedExpr (CheckedNotEqual _ e1 e2) = intermedRelopExpr "!=" e1 e2
 intermedExpr (CheckedLt _ e1 e2)       = intermedRelopExpr "<" e1 e2
 intermedExpr (CheckedLte _ e1 e2)      = intermedRelopExpr "<=" e1 e2

@@ -144,6 +144,9 @@ genExpr (IIntExpr num) =
 genExpr (IAopExpr op v1 v2) = 
   return $ [prettyInst ["lw", "$t1", show v1]
            ,prettyInst ["lw", "$t2", show v2]] ++ genAop op
+genExpr (IRelopExpr op v1 v2) =
+  return $ [prettyInst ["lw", "$t1", show v1]
+           ,prettyInst ["lw", "$t2", show v2]] ++ genRelop op
 genExpr (IAddrExpr (VarAddr addr)) =
   case addr of
     (Fp n) -> return $ [prettyInst ["addi", "$t0", "$fp", show n]]
@@ -157,3 +160,24 @@ genAop "*" = [prettyInst ["mult", "$t1", "$t2"]
              ,prettyInst ["mflo", "$t0"]]
 genAop "/" = [prettyInst ["div",  "$t1", "$t2"]
              ,prettyInst ["mflo", "$t0"]]
+
+
+genRelop :: String -> [String]
+genRelop "==" = [prettyInst ["beq", "$t1", "$t2", "eq1"]
+                ,prettyInst ["li", "$t0", show 0] -- not equal
+                ,prettyInst ["j", "eq0"]]
+             ++ ["eq1:"] 
+             ++ [prettyInst ["li", "$t0", show 1]]
+             ++ ["eq0:"]
+genRelop "!=" = [prettyInst ["bne", "$t1", "$t2", "neq1"]
+                ,prettyInst ["li", "$t0", show 0] -- equal
+                ,prettyInst ["j", "neq0"]]
+             ++ ["neq1:"] 
+             ++ [prettyInst ["li", "$t0", show 1]]
+             ++ ["neq0:"]
+genRelop "<"  = [prettyInst ["slt", "$t0", "$t1", "$t2"]]
+genRelop ">"  = [prettyInst ["slt", "$t0", "$t2", "$t1"]]
+genRelop "<=" = [prettyInst ["addi", "$t2", show 1]
+                ,prettyInst ["slt", "$t0", "$t1", "$t2"]]
+genRelop ">=" = [prettyInst ["addi", "$t1", show 1]
+                ,prettyInst ["slt", "$t0", "$t2", "$t1"]]
