@@ -35,15 +35,14 @@ prettyInst :: [String] -> String
 prettyInst (op:args) = concat ["    ", op, " ", concat (intersperse ", " args)]
 
 
+{-==========================
+ -      genCode
+ -==========================-}
 genCode :: IProgram -> Asm
 genCode prog = header ++ body
-  where header = "    .text" ++ "\n" ++   ".globl main" ++  "\n"
+  where header = "    .text" ++ "\n" ++ "    .globl main" ++  "\n"
         body   = runLabelEnv (do asm <- mapM genIExDecl prog
                                  return $ withLineBreaks asm)
-
-
-t :: Int -> String
-t n = "$t" ++ show n
 
 
 genIExDecl :: IExDecl -> LabelEnv Asm
@@ -83,8 +82,8 @@ genStmt (IReadStmt dest src) =
   return $ [prettyInst ["lw", "0(" ++ show src ++ ")", show dest]]
 genStmt (IReturnStmt retvar) =
   return $ [prettyInst ["li", "$v0", show 1]
-           ,prettyInst ["li", "$a0", show retvar]
-           ,"syscall"]
+           ,prettyInst ["lw", "$a0", show retvar]
+           ,"    syscall"]
 genStmt (ICompoundStmt decls stmts) = liftM concat (mapM genStmt stmts)
 
 genExpr :: IExpr -> LabelEnv [Asm]

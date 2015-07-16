@@ -30,4 +30,4 @@ main :: IO ()
 main = do 
   args <- getArgs
   file <- readFile $ head args
-  putStr $ run file
+  putStrLn $ run file

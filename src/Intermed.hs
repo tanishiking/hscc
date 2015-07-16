@@ -23,7 +23,11 @@ type IVarAddr = Address
 type IProgram = [IExDecl]
 data IVar = VarInfo Info
           | VarAddr IVarAddr
-          deriving (Show, Eq)
+          deriving (Eq)
+
+instance Show IVar where
+  show (VarInfo info) = show info
+  show (VarAddr addr) = show addr
 
 data IExDecl = IDecl    [IVar]
              | IFuncDef IVar [IVar] IStmt
