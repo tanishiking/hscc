@@ -23,6 +23,10 @@ withLineBreaks = concat . intersperse "\n"
 getFuncFrameSize :: IStmt -> Int
 getFuncFrameSize (ICompoundStmt decls stmts)
   = minimum $ (map getFpAddr decls) ++ (map getFuncFrameSize stmts)
+getFuncFrameSize (IIfStmt _ true false)
+  = minimum $ map getFuncFrameSize (true ++ false)
+getFuncFrameSize (IWhileStmt _ body)
+  = minimum $ map getFuncFrameSize body
 getFuncFrameSize _ = 0
 
 
@@ -109,6 +113,14 @@ genStmt (IIfStmt cond trStmts flStmts) = do
         ++ ["else:"]
         ++ false
         ++ ["finally:"]
+genStmt (IWhileStmt cond stmts) = do
+  body <- liftM concat $ mapM genStmt stmts
+  return $ ["loop:"] ++
+           [prettyInst ["lw", "$t0", show cond]
+           ,prettyInst ["beq", "$t0", "$zero", "endwhile"]]
+        ++ body
+        ++ [prettyInst ["j", "loop"]]
+        ++ ["endwhile:"]
 genStmt (ICallStmt dest f args) =
   if (getType $ snd f) == ChVoid
   then return withoutReturn
