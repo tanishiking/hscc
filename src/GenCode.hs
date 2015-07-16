@@ -48,7 +48,9 @@ genCode prog = header ++ body
 genIExDecl :: IExDecl -> LabelEnv Asm
 genIExDecl (IFuncDef (VarInfo func) args body) = do
   let fpSize = (length args) * wordSize
-      spSize = abs $ getFuncFrameSize body
+      spSize = (abs $ getFuncFrameSize body) +
+               fpSize +     -- 引数のため
+               wordSize * 2 -- $fp, $raのための空間
   setStackPointer (-spSize)
   stmt <- genStmt body
   return (withLineBreaks $ 
