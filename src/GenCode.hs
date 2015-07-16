@@ -9,11 +9,11 @@ import Control.Monad.State
 
 type Asm = String
 
-type LabelEnv = State (Int, Int)
+type LabelEnv = State Int
 
 
 runLabelEnv :: LabelEnv a -> a
-runLabelEnv s = evalState s (0, 0)
+runLabelEnv s = evalState s 0 
 
 
 withLineBreaks :: [String] -> String
@@ -28,8 +28,8 @@ getFuncFrameSize _ = 0
 
 setStackPointer :: Int -> LabelEnv ()
 setStackPointer size = do
-  (n, m) <- get
-  put (n, size)
+  _ <- get
+  put size
 
 
 -- 引数は$spの下に積んでいく
@@ -99,6 +99,16 @@ genStmt (IReadStmt dest src) =
   return $ [prettyInst ["lw", "$t1", show src]
            ,prettyInst ["lw", "$t0", "0($t1)"]
            ,prettyInst ["sw", "$t0", show dest]]
+genStmt (IIfStmt cond trStmts flStmts) = do
+  true  <- liftM concat $ mapM genStmt trStmts
+  false <- liftM concat $ mapM genStmt flStmts
+  return $ [prettyInst ["lw", "$t0", show cond]
+           ,prettyInst ["beq", "$t0", "$zero", "else"]]
+        ++ true
+        ++ [prettyInst ["j", "finally"]] -- true節終わり
+        ++ ["else:"]
+        ++ false
+        ++ ["finally:"]
 genStmt (ICallStmt dest f args) =
   if (getType $ snd f) == ChVoid
   then return withoutReturn
