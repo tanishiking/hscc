@@ -9,13 +9,11 @@ import Control.Monad.State
 
 type AddrEnv = State (FpAddr, GpAddr, [(IVar, IVarAddr)])
 
-
-
-
-getFpAddr :: Address -> Int
-getFpAddr (Fp n)  = n
-getFpAddr (Gp n)  = 0
-getFpAddr (Reg n) = 0
+getFpAddr :: IVar -> Int
+getFpAddr (VarAddr (Fp n))  = n
+getFpAddr (VarAddr (Gp n))  = 0
+--getFpAddr (VarAddr (Reg n)) = 0
+getFpAddr (VarInfo _      ) = 0
 
 
 wordSize :: Int

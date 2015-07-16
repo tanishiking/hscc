@@ -11,8 +11,12 @@ type GpAddr = Int
 
 data Address = Fp  Int
              | Gp  Int
-             | Reg Int
-             deriving (Show, Eq)
+--             | Reg Int
+             deriving (Eq)
+
+instance Show Address where
+  show (Fp n) = show n ++ "($fp)"
+  show (Gp n) = show n ++ "($gp)"
 
 type IVarAddr = Address
 
