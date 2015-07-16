@@ -67,7 +67,8 @@ genIExDecl (IFuncDef (VarInfo func) args body) = do
          -- 呼び出し元に制御を戻す
          ++ [prettyInst ["lw", "$ra", "4($sp)"] -- raを復元
             ,prettyInst ["lw", "$fp", "0($sp)"] -- fpを復元
-            ,prettyInst ["move", "$sp", "$t0"] -- spを復元
+            -- spを復元
+            ,prettyInst ["addi", "$sp", "$sp", show spSize] 
             ,prettyInst ["jr", "$ra"]] -- 制御を呼び出し元に戻す
          )
 genIExDecl _ = return ""
