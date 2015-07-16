@@ -1,5 +1,6 @@
 module GenCode where
 
+import Environment
 import Intermed
 import AssignAddr
 
@@ -29,6 +30,17 @@ setStackPointer :: Int -> LabelEnv ()
 setStackPointer size = do
   (n, m) <- get
   put (n, size)
+
+
+-- 引数は$spの下に積んでいく
+setArgs :: [IVar] -> [Asm]
+setArgs args = fst $ foldr foldArgs ([], -4) args
+  where
+    foldArgs :: IVar -> ([Asm], Int) -> ([Asm], Int)
+    foldArgs arg (asm, curAddr) = 
+      ([prettyInst ["lw", "$t0", show arg]
+       ,prettyInst ["sw", "$t0", show curAddr ++ "($sp)"]] ++ asm,
+      curAddr - wordSize)
 
 
 prettyInst :: [String] -> String
@@ -87,9 +99,18 @@ genStmt (IReadStmt dest src) =
   return $ [prettyInst ["lw", "$t1", show src]
            ,prettyInst ["lw", "$t0", "0($t1)"]
            ,prettyInst ["sw", "$t0", show dest]]
-genStmt (IPrintStmt retvar) =
+genStmt (ICallStmt dest f args) =
+  if (getType $ snd f) == ChVoid
+  then return withoutReturn
+  else return $ withoutReturn ++ 
+                [prettyInst ["sw", "$v0", show dest]]
+    where withoutReturn = setArgs args ++ 
+                          [prettyInst ["jal", fst f]]
+genStmt (IReturnStmt retvar) =
+  return $ [prettyInst ["lw", "$v0", show retvar]]
+genStmt (IPrintStmt var) =
   return $ [prettyInst ["li", "$v0", show 1]
-           ,prettyInst ["lw", "$a0", show retvar]
+           ,prettyInst ["lw", "$a0", show var]
            ,"    syscall"]
 genStmt (ICompoundStmt decls stmts) = liftM concat (mapM genStmt stmts)
 
