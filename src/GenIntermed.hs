@@ -20,6 +20,10 @@ result [] = error "unexpected vars"
 result l  = head l
 
 
+wordSize :: Int
+wordSize = 4
+
+
 {- 新しく変数を作って次に出てくる変数の番号をひとつ増やす -}
 genFreshVar :: VarEnv IVar
 genFreshVar = do
@@ -173,18 +177,38 @@ intermedAndExpr e1 e2 = do
                                                             [ILetStmt dest (IIntExpr 0)]]
                                     [ILetStmt dest (IIntExpr 0)]])
 
+-- 配列のアドレスを計算するときなど
 intermedAopExpr :: String -> 
                    CheckedExpr -> 
                    CheckedExpr ->
                    VarEnv ([IVar], [IStmt])
-intermedAopExpr op e1 e2 = do
-  (vars1, stmts1) <- intermedExpr e1
-  (vars2, stmts2) <- intermedExpr e2
-  dest            <- genFreshVar
-  return (dest:(vars1 ++ vars2),
-          stmts1 ++ stmts2 ++ 
-            [ILetStmt dest $ IAopExpr op (result vars1) (result vars2)])
+intermedAopExpr op e1 e2 =
+  if isPointer e1
+  then do (vars1, stmts1) <- intermedExpr e1
+          (vars2, stmts2) <- intermedExpr e2
+          dest            <- genFreshVar
+          word            <- genFreshVar
+          tmp             <- genFreshVar
+          return (dest:word:tmp:(vars1 ++ vars2),
+                  stmts1 ++ stmts2 ++ 
+                  [ILetStmt word (IIntExpr 4)
+                  ,ILetStmt tmp (IAopExpr "*" word (result vars2))
+                  ,ILetStmt dest $ IAopExpr op (result vars1) tmp])
+  else do (vars1, stmts1) <- intermedExpr e1
+          (vars2, stmts2) <- intermedExpr e2
+          dest            <- genFreshVar
+          return (dest:(vars1 ++ vars2),
+                  stmts1 ++ stmts2 ++ 
+                  [ILetStmt dest $ IAopExpr op (result vars1) (result vars2)])
 
+
+isPointer :: CheckedExpr -> Bool
+isPointer (CheckedIdentExpr _ info) =
+  case (getType $ snd info) of
+    (ChPointer _) -> True
+    (ChArray _ _) -> True
+    _             -> False
+isPointer _ = False
 
 
 intermedRelopExpr :: String -> 
