@@ -9,11 +9,12 @@ import Control.Monad.State
 
 type Asm = String
 
-type LabelEnv = State Int
+-- (LabelNumber, FrameSize)
+type LabelEnv = State (Int, Int)
 
 
 runLabelEnv :: LabelEnv a -> a
-runLabelEnv s = evalState s 0 
+runLabelEnv s = evalState s (0, 0) 
 
 
 withLineBreaks :: [String] -> String
@@ -32,8 +33,8 @@ getFuncFrameSize _ = 0
 
 setStackPointer :: Int -> LabelEnv ()
 setStackPointer size = do
-  _ <- get
-  put size
+  (n, _) <- get
+  put (n, size)
 
 
 -- 引数は$spの下に積んでいく
@@ -49,6 +50,14 @@ setArgs args = fst $ foldr foldArgs ([], -4) args
 
 prettyInst :: [String] -> String
 prettyInst (op:args) = concat ["    ", op, " ", concat (intersperse ", " args)]
+
+
+genUniqLabel :: String -> LabelEnv String
+genUniqLabel labelName = do
+  (n, size) <- get
+  put (n+1, size)
+  return $ labelName ++ (show n)
+
 
 
 {-==========================
@@ -104,23 +113,27 @@ genStmt (IReadStmt dest src) =
            ,prettyInst ["lw", "$t0", "0($t1)"]
            ,prettyInst ["sw", "$t0", show dest]]
 genStmt (IIfStmt cond trStmts flStmts) = do
+  finally <- genUniqLabel "finally"
+  elselab <- genUniqLabel "else"
   true  <- liftM concat $ mapM genStmt trStmts
   false <- liftM concat $ mapM genStmt flStmts
   return $ [prettyInst ["lw", "$t0", show cond]
-           ,prettyInst ["beq", "$t0", "$zero", "else"]]
+           ,prettyInst ["beq", "$t0", "$zero", elselab]]
         ++ true
-        ++ [prettyInst ["j", "finally"]] -- true節終わり
-        ++ ["else:"]
+        ++ [prettyInst ["j", finally]] -- true節終わり
+        ++ [elselab ++ ":"]
         ++ false
-        ++ ["finally:"]
+        ++ [finally ++ ":"]
 genStmt (IWhileStmt cond stmts) = do
+  loop <- genUniqLabel "loop"
+  endwhile <- genUniqLabel "endwhile"
   body <- liftM concat $ mapM genStmt stmts
-  return $ ["loop:"] ++
+  return $ [loop ++ ":"] ++
            [prettyInst ["lw", "$t0", show cond]
-           ,prettyInst ["beq", "$t0", "$zero", "endwhile"]]
+           ,prettyInst ["beq", "$t0", "$zero", endwhile]]
         ++ body
-        ++ [prettyInst ["j", "loop"]]
-        ++ ["endwhile:"]
+        ++ [prettyInst ["j", loop]]
+        ++ [endwhile ++ ":"]
 genStmt (ICallStmt dest f args) =
   if (getType $ snd f) == ChVoid
   then return withoutReturn
@@ -144,9 +157,10 @@ genExpr (IIntExpr num) =
 genExpr (IAopExpr op v1 v2) = 
   return $ [prettyInst ["lw", "$t1", show v1]
            ,prettyInst ["lw", "$t2", show v2]] ++ genAop op
-genExpr (IRelopExpr op v1 v2) =
+genExpr (IRelopExpr op v1 v2) = do
+  relop <- genRelop op
   return $ [prettyInst ["lw", "$t1", show v1]
-           ,prettyInst ["lw", "$t2", show v2]] ++ genRelop op
+           ,prettyInst ["lw", "$t2", show v2]] ++ relop
 genExpr (IAddrExpr (VarAddr addr)) =
   case addr of
     (Fp n) -> return $ [prettyInst ["addi", "$t0", "$fp", show n]]
@@ -162,22 +176,28 @@ genAop "/" = [prettyInst ["div",  "$t1", "$t2"]
              ,prettyInst ["mflo", "$t0"]]
 
 
-genRelop :: String -> [String]
-genRelop "==" = [prettyInst ["beq", "$t1", "$t2", "eq1"]
-                ,prettyInst ["li", "$t0", show 0] -- not equal
-                ,prettyInst ["j", "eq0"]]
-             ++ ["eq1:"] 
-             ++ [prettyInst ["li", "$t0", show 1]]
-             ++ ["eq0:"]
-genRelop "!=" = [prettyInst ["bne", "$t1", "$t2", "neq1"]
-                ,prettyInst ["li", "$t0", show 0] -- equal
-                ,prettyInst ["j", "neq0"]]
-             ++ ["neq1:"] 
-             ++ [prettyInst ["li", "$t0", show 1]]
-             ++ ["neq0:"]
-genRelop "<"  = [prettyInst ["slt", "$t0", "$t1", "$t2"]]
-genRelop ">"  = [prettyInst ["slt", "$t0", "$t2", "$t1"]]
-genRelop "<=" = [prettyInst ["addi", "$t2", show 1]
-                ,prettyInst ["slt", "$t0", "$t1", "$t2"]]
-genRelop ">=" = [prettyInst ["addi", "$t1", show 1]
-                ,prettyInst ["slt", "$t0", "$t2", "$t1"]]
+genRelop :: String -> LabelEnv [String]
+genRelop "==" = do
+ true <- genUniqLabel "true" 
+ false <- genUniqLabel "false"
+ return $ [prettyInst ["beq", "$t1", "$t2", true]
+          ,prettyInst ["li", "$t0", show 0] -- not equal
+          ,prettyInst ["j", false]]
+       ++ [true ++ ":"] 
+       ++ [prettyInst ["li", "$t0", show 1]]
+       ++ [false ++ ":"]
+genRelop "!=" = do
+ true <- genUniqLabel "true" 
+ false <- genUniqLabel "false"
+ return $ [prettyInst ["bne", "$t1", "$t2", true]
+          ,prettyInst ["li", "$t0", show 0] -- equal
+          ,prettyInst ["j", false]]
+       ++ [true ++ ":"] 
+       ++ [prettyInst ["li", "$t0", show 1]]
+       ++ [false ++ ":"]
+genRelop "<"  = return [prettyInst ["slt", "$t0", "$t1", "$t2"]]
+genRelop ">"  = return [prettyInst ["slt", "$t0", "$t2", "$t1"]]
+genRelop "<=" = return [prettyInst ["addi", "$t2", show 1]
+                       ,prettyInst ["slt", "$t0", "$t1", "$t2"]]
+genRelop ">=" = return [prettyInst ["addi", "$t1", show 1]
+                       ,prettyInst ["slt", "$t0", "$t2", "$t1"]]
