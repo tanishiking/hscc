@@ -135,7 +135,19 @@ intermedExpr (CheckedExprList _ exprs) = do
 intermedExpr (CheckedConstant _ num) = do
   dest <- genFreshVar
   return ([dest], [ILetStmt dest (IIntExpr num)])
-intermedExpr (CheckedIdentExpr _ ident) = return ([VarInfo ident], [])
+intermedExpr (CheckedIdentExpr _ ident) =
+  if isArray ident
+    then do v <- genFreshVar
+            return $ (v:[VarInfo ident]
+                    ,[ILetStmt v (IAddrExpr $ VarInfo ident)])
+    else return ([VarInfo ident], [])
+
+
+isArray :: Info -> Bool
+isArray (_, (_, ty, _))
+  = case ty of
+      (ChArray _ _) -> True
+      _             -> False
 
 
 intermedOrExpr :: CheckedExpr -> CheckedExpr -> VarEnv ([IVar], [IStmt])
