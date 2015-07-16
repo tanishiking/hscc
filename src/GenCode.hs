@@ -87,7 +87,7 @@ genStmt (IReadStmt dest src) =
   return $ [prettyInst ["lw", "$t1", show src]
            ,prettyInst ["lw", "$t0", "0($t1)"]
            ,prettyInst ["sw", "$t0", show dest]]
-genStmt (IReturnStmt retvar) =
+genStmt (IPrintStmt retvar) =
   return $ [prettyInst ["li", "$v0", show 1]
            ,prettyInst ["lw", "$a0", show retvar]
            ,"    syscall"]
