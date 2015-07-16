@@ -80,9 +80,13 @@ genStmt (ILetStmt dest srcExpr) = do
   expr <- genExpr srcExpr
   return $ expr ++ [prettyInst ["sw", "$t0", show dest]]
 genStmt (IWriteStmt dest src) =
-  return $ [prettyInst ["sw", show src, "0(" ++ show dest ++ ")"]]
+  return $ [prettyInst ["lw", "$t0", show src]
+           ,prettyInst ["lw", "$t1", show dest]
+           ,prettyInst ["sw", "$t0", "0($t1)"]]
 genStmt (IReadStmt dest src) =
-  return $ [prettyInst ["lw", "0(" ++ show src ++ ")", show dest]]
+  return $ [prettyInst ["lw", "$t1", show src]
+           ,prettyInst ["lw", "$t0", "0($t1)"]
+           ,prettyInst ["sw", "$t0", show dest]]
 genStmt (IReturnStmt retvar) =
   return $ [prettyInst ["li", "$v0", show 1]
            ,prettyInst ["lw", "$a0", show retvar]

@@ -85,10 +85,10 @@ intermedStmt (CheckedReturnStmt _ expr) = do
 
 
 intermedExpr :: CheckedExpr -> VarEnv ([IVar], [IStmt])
-intermedExpr (CheckedAssignExpr _ dest src) =
-  case dest of 
+intermedExpr (CheckedAssignExpr _ pdest src) =
+  case pdest of
     (CheckedUnaryPointer _ dst) -> do 
-      (varsDest, stmtDest) <- intermedExpr dest
+      (varsDest, stmtDest) <- intermedExpr dst
       (varsSrc,  stmtSrc)  <- intermedExpr src
       return (varsDest ++ varsSrc,
               stmtDest ++ stmtSrc ++ [IWriteStmt (result varsDest)
