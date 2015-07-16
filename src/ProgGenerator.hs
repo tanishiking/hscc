@@ -69,7 +69,7 @@ convExpr (Gte _ e1 e2)         = concat [convExpr e1, " >= ", convExpr e2]
 convExpr (Minus _ e1 e2)       = concat [convExpr e1, " - ", convExpr e2]
 convExpr (Plus _ e1 e2)        = concat [convExpr e1, " + ", convExpr e2]
 convExpr (Multiple _ e1 e2)    = concat [convExpr e1, " * ", convExpr e2]
-convExpr (Devide _ e1 e2)      = concat [convExpr e1, " / ", convExpr e2]
+convExpr (Divide _ e1 e2)      = concat [convExpr e1, " / ", convExpr e2]
 --convExpr (UnaryMinus _ e)      = "-" ++ convExpr e
 convExpr (UnaryAddress _ e)    = "&" ++ convExpr e
 convExpr (UnaryPointer _ e)    = "*" ++ "(" ++ convExpr e ++ ")"

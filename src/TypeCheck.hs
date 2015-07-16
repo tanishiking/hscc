@@ -21,7 +21,7 @@ getRetFuncType (k, t, l) =
 
 eDeclTypeCheck :: CheckedEDecl -> Either String ()
 eDeclTypeCheck (CheckedDecl _ _) = return ()
-eDeclTypeCheck (CheckedFuncProt pos info args) = return ()
+--eDeclTypeCheck (CheckedFuncProt pos info args) = return ()
 eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) args stmt) =
   let maybeExpectedRetType = getRetFuncType finfo in do
     case maybeExpectedRetType of
@@ -86,7 +86,7 @@ exprTypeCheck (CheckedGte pos e1 e2)      = checkCompare pos e1 e2
 exprTypeCheck (CheckedPlus pos e1 e2)     = checkAddSub pos e1 e2
 exprTypeCheck (CheckedMinus pos e1 e2)    = checkAddSub pos e1 e2
 exprTypeCheck (CheckedMultiple pos e1 e2) = checkBothInt pos e1 e2
-exprTypeCheck (CheckedDevide pos e1 e2)   = checkBothInt pos e1 e2
+exprTypeCheck (CheckedDivide pos e1 e2)   = checkBothInt pos e1 e2
 exprTypeCheck (CheckedUnaryAddress pos e) = do
   checkAddressRefer pos e
   ty <- exprTypeCheck e

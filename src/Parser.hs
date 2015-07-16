@@ -189,16 +189,16 @@ stmt =  try (do pos <- getPosition
                 pos <- getPosition
                 return $ ExprStmt pos e)
     <|> try compoundStmt
-    <|> try (do symbol "if"
-                pos <- getPosition
-                e   <- parens expr
-                s   <- stmt
-                return $ IfStmt pos e s (EmptyStmt pos))
     <|> try (do e   <- symbol "if"   >> parens expr
                 pos <- getPosition
                 s1  <- stmt
                 s2  <- symbol "else" >> stmt
                 return $ IfStmt pos e s1 s2)
+    <|> try (do symbol "if"
+                pos <- getPosition
+                e   <- parens expr
+                s   <- stmt
+                return $ IfStmt pos e s (EmptyStmt pos))
     <|> try (do e   <- symbol "while" >> parens expr
                 pos <- getPosition
                 s   <- stmt
@@ -248,7 +248,7 @@ logicalOrExpr =  buildExpressionParser table unaryExpr
  - ========================= -}
 
 table :: [[Operator String () Identity Expr]]
-table = [[op "*"  Multiple AssocLeft, op "/"  Devide   AssocLeft]
+table = [[op "*"  Multiple AssocLeft, op "/"  Divide   AssocLeft]
         ,[op "+"  Plus     AssocLeft, op "-"  Minus    AssocLeft]
         ,[op "<"  Lt       AssocLeft, op ">"  Gt       AssocLeft,
           op "<=" Lte      AssocLeft, op ">=" Gte      AssocLeft]
