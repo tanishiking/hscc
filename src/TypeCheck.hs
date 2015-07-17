@@ -28,7 +28,7 @@ eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) _ stmt) =
                         case eitherType of
                           (Left err)      -> fail err
                           (Right actType) -> 
-                            if (expType == actType) 
+                            if (expType == actType || fname == "main") 
                               then return () 
                               else fail $ concat [show pos, " invalid type error: \n  Expected:", show expType, "\n  Actual:", show actType]
       Nothing   -> fail $ concat [show pos, " invalid function return type", show (getType finfo)]
