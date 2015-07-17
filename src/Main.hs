@@ -18,10 +18,8 @@ run input =
   let prog = parseProgram input in
   case prog of
     Left  err -> err
-    Right val -> (genCode $ assignAddr $ intermed) ++
-  --               "\n" ++ show intermed ++ "\n" ++
-   --            ++ "-------\n" ++ (show $ fst $ sval) ++ "\n"
-                 (concat . snd $ sval)
+    Right val -> (genCode $ assignAddr $ intermed)
+--               (concat . snd $ sval)
                    where sval = semanticCheck val
                          intermed = intermedProgram $ fst sval
 
