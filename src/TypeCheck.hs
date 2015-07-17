@@ -106,7 +106,7 @@ exprTypeCheck (CheckedUnaryPointer pos e) = do
   ty <- exprTypeCheck e
   case ty of
     (ChPointer pty) -> return pty
-    ChInt           -> return ChInt
+  --ChInt           -> return ChInt
     _               -> fail $ concat [show pos, "invalid pointer refer, you cannot refer ", show ty]
 exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
   argTypes <- mapM exprTypeCheck args
