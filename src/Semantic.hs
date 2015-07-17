@@ -1,8 +1,8 @@
 module Semantic where
 
-import Control.Monad.State.Strict
-import Control.Monad.Writer
 import Control.Monad
+import Control.Monad.Writer
+import Control.Monad.State.Strict
 import Data.List
 import Text.Parsec
 
@@ -27,7 +27,7 @@ checkProgram prog = liftM concat $ mapM checkExternalDecl prog
 
 checkExternalDecl :: ExternalDeclaration -> StateEnv [CheckedEDecl]
 checkExternalDecl (Decl pos declarators)            = checkExDeclarators pos declarators
-checkExternalDecl (FuncProt pos ty name params)     = return []
+checkExternalDecl (FuncProt _ _ _ _)                = return []
 checkExternalDecl (FuncDef pos ty name params stmt) = checkExFuncDef     pos ty name params stmt
 
 
@@ -59,7 +59,7 @@ checkExFuncDef pos ty name params body =
 
 
 checkStmt :: Level -> Stmt -> StateEnv CheckedStmt
-checkStmt lev (EmptyStmt _)  = return CheckedEmptyStmt
+checkStmt _ (EmptyStmt _)    = return CheckedEmptyStmt
 checkStmt lev (ExprStmt _ e) = do
   cexpr <- checkExpr lev e
   return $ CheckedExprStmt cexpr
@@ -150,7 +150,7 @@ checkExpr lev (CallFunc pos name params) = do
 checkExpr lev (ExprList pos exprs) = do
   cexprs   <- mapM (checkExpr lev) exprs
   return $ CheckedExprList pos cexprs
-checkExpr lev (Constant pos num) = return $ CheckedConstant pos num
+checkExpr _ (Constant pos num) = return $ CheckedConstant pos num
 checkExpr lev (IdentExpr pos name) = do
   info <- findOrErr pos lev name
   case info of

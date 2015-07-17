@@ -163,7 +163,7 @@ withNewEnv lev append body = append >> body <* delLevel lev
 
 
 find :: Level -> Identifier -> StateEnv (Maybe Info)
-find lev name = do
+find lev name =
   if lev < 0
   then return Nothing
   else do

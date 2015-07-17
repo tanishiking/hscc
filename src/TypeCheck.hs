@@ -2,9 +2,8 @@ module TypeCheck where
 
 import Text.Parsec
 import Control.Monad
-import Debug.Trace
 
-import AST
+import AST()
 import CheckedAST
 import Environment
 
@@ -13,7 +12,7 @@ typeCheck = mapM_ eDeclTypeCheck
 
 
 getRetFuncType :: (Kind, ChType, Level) -> Maybe ChType
-getRetFuncType (k, t, l) =
+getRetFuncType (_, t, _) =
   case t of
     (ChFunc ct _) -> Just ct 
     _             -> Nothing
@@ -22,7 +21,7 @@ getRetFuncType (k, t, l) =
 eDeclTypeCheck :: CheckedEDecl -> Either String ()
 eDeclTypeCheck (CheckedDecl _ _) = return ()
 --eDeclTypeCheck (CheckedFuncProt pos info args) = return ()
-eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) args stmt) =
+eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) _ stmt) =
   let maybeExpectedRetType = getRetFuncType finfo in do
     case maybeExpectedRetType of
       (Just expType) -> let eitherType = stmtTypeCheck (fname, finfo) stmt in do
@@ -57,7 +56,7 @@ stmtTypeCheck info (CheckedWhileStmt pos cond stmt) =
   (Right expTy) -> if expTy /= ChInt
                      then fail $ concat [show pos, "invalid expression", show cond, " - it must be int"]
                      else stmtTypeCheck info stmt 
-stmtTypeCheck (fname, finfo) (CheckedReturnStmt pos e) =
+stmtTypeCheck (_, finfo) (CheckedReturnStmt pos e) =
   let maybeExpectedRetType = getRetFuncType finfo in do
     case maybeExpectedRetType of
       (Just expType) -> do actualType <- exprTypeCheck e
@@ -105,9 +104,9 @@ exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
     (Func, ChFunc ty paramTypes, _) -> if argTypes == paramTypes
                                           then return ty
                                           else fail $ concat [show pos, "type mismatch in func params\n  Expected: ", show paramTypes, "\n  Actual: ", show argTypes]
-exprTypeCheck (CheckedExprList pos exprs)         = liftM last (mapM exprTypeCheck exprs)
-exprTypeCheck (CheckedConstant pos num)           = return ChInt
-exprTypeCheck (CheckedIdentExpr pos (name, info)) = return $ getType info
+exprTypeCheck (CheckedExprList _ exprs)           = liftM last (mapM exprTypeCheck exprs)
+exprTypeCheck (CheckedConstant _ _)               = return ChInt
+exprTypeCheck (CheckedIdentExpr _ (_, info))      = return $ getType info
 
 
 
@@ -151,10 +150,10 @@ checkAssignForm pos (CheckedIdentExpr _ (name, (kind, ty, _))) =
     (FProt, _)              -> fail $ concat [show pos, "invalid assignment to: ", show name] 
     (Param, (ChArray _ _ )) -> fail $ concat [show pos, "invalid assignment to: ", show name] 
     (Param, _)              -> return ()
-checkAssignForm pos (CheckedUnaryPointer _ e) = return ()
+checkAssignForm _ (CheckedUnaryPointer _ _) = return ()
 checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form"]
 
 
 checkAddressRefer :: SourcePos -> CheckedExpr -> Either String ()
-checkAddressRefer pos (CheckedIdentExpr _ _) = return ()
+checkAddressRefer _ (CheckedIdentExpr _ _) = return ()
 checkAddressRefer pos _ = fail $ concat [show pos, "invalid operand &: it must be used for Identifier"]

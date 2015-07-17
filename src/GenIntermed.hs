@@ -4,8 +4,6 @@ import Intermed
 import CheckedAST
 import Environment
 
-import Debug.Trace
-
 import Control.Monad.State.Strict
 
 type VarNum   = Int
@@ -49,7 +47,7 @@ intermedExDecl (CheckedDecl _ vars) = return $ IDecl (map VarInfo vars)
 intermedExDecl (CheckedFuncDef _ finfo args body) = 
   let finfo' = VarInfo finfo
       args'  = map VarInfo args in do
-    (vars, stmts) <- intermedStmt body
+    (_, stmts) <- intermedStmt body
     return $ IFuncDef finfo' args' (head stmts)
     -- どうせ関数定義のstmtsは[ICompoundStmt]
 
