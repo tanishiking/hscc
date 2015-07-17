@@ -70,8 +70,9 @@ collectExternalDecl (FuncProt pos ty name args)
     maybeInfo <- findAtTheLevel globalLevel name
     case maybeInfo of
       (Just info) -> if info == snd funcInfo
-                     then return ()
-                     else error $ concat [show pos, ": invalid prototype decl, ", name]
+                     then return ()  -- プロトタイプ二重宣言
+                     else error $ concat [show pos, ": invalid prototype decl, "
+                                         ,name, ": ", name, " is already declared"]
       Nothing  -> appendEnv globalLevel funcInfo
 collectExternalDecl (FuncDef pos ty name args stmt)
   = let funcInfo = makeFuncInfo ty name args Func in do

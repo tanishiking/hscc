@@ -160,7 +160,8 @@ checkAssignForm pos (CheckedIdentExpr _ (name, (kind, ty, _))) =
     (Param, (ChArray _ _ )) -> fail $ concat [show pos, "invalid assignment to: ", show name] 
     (Param, _)              -> return ()
 checkAssignForm _ (CheckedUnaryPointer _ _) = return ()
-checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form"]
+checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form : "
+                                      ,"dest must be Identifier of Pointer"]
 
 
 checkAddressRefer :: SourcePos -> CheckedExpr -> Either String ()
