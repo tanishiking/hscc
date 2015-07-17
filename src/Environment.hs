@@ -83,7 +83,8 @@ collectExternalDecl (FuncDef pos ty name args stmt)
                                           else error $ concat [show pos, ": invalid decl,", name]
                      (Func, _, _)   -> error $ concat [show pos, ": invalid decl,", name]
                      _              -> appendEnv globalLevel funcInfo
-      Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
+      --Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
+      Nothing -> appendEnv globalLevel funcInfo
 
 
 {-============================
@@ -101,7 +102,8 @@ appendWithDupCheck pos lev info =
     case maybeInfo of
       (Just mInfo) -> if (getLevel . snd $ mInfo) == paramLevel
                       then (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv bodyLevel info
-                      else error $ concat [show pos, "duplicate variable: ", show name]
+                      --else error $ concat [show pos, "duplicate variable: ", show name]
+                      else appendEnv lev info
       Nothing  -> appendEnv lev info
 
 
