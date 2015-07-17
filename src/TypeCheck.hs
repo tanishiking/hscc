@@ -104,10 +104,15 @@ exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
     (Func, ChFunc ty paramTypes, _) -> if argTypes == paramTypes
                                           then return ty
                                           else fail $ concat [show pos, "type mismatch in func params\n  Expected: ", show paramTypes, "\n  Actual: ", show argTypes]
-exprTypeCheck (CheckedExprList _ exprs)           = liftM last (mapM exprTypeCheck exprs)
+exprTypeCheck (CheckedExprList _ exprs)           = liftM typeLast (mapM exprTypeCheck exprs)
 exprTypeCheck (CheckedConstant _ _)               = return ChInt
 exprTypeCheck (CheckedIdentExpr _ (_, info))      = return $ getType info
 
+
+typeLast :: [ChType] -> ChType
+typeLast [x]    =  x
+typeLast (_:xs) =  last xs
+typeLast []     =  ChVoid
 
 
 checkBothInt :: SourcePos -> CheckedExpr -> CheckedExpr -> Either String ChType
