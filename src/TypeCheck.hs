@@ -30,8 +30,18 @@ eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) _ stmt) =
                           (Right actType) -> 
                             if (expType == actType || fname == "main") 
                               then return () 
-                              else fail $ concat [show pos, " invalid type error: \n  Expected:", show expType, "\n  Actual:", show actType]
+                              else fail $ concat [show pos, " invalid type error: \n  Expected:"
+                                                 ,show expType, "\n  Actual:", show actType]
       Nothing   -> fail $ concat [show pos, " invalid function return type", show (getType finfo)]
+
+
+typeMaximum :: [ChType] -> ChType
+typeMaximum []  = ChVoid
+typeMaximum [x] = x
+typeMaximum (x:xs)
+    | x > maxTail = x
+    | otherwise = maxTail
+    where maxTail = typeMaximum xs
 
 
 stmtTypeCheck :: Info -> CheckedStmt -> Either String ChType
@@ -39,7 +49,7 @@ stmtTypeCheck _ (CheckedEmptyStmt) = return ChVoid
 stmtTypeCheck _ (CheckedExprStmt e) = exprTypeCheck e >> return ChVoid
 stmtTypeCheck info (CheckedCompoundStmt _ stmts) = do
   stmtsType <- mapM (stmtTypeCheck info) stmts
-  return $ maximum stmtsType
+  return $ typeMaximum stmtsType
 stmtTypeCheck info (CheckedIfStmt pos cond true false) =
   let eitherExprTy = exprTypeCheck cond in
   case eitherExprTy of

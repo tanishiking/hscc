@@ -23,13 +23,20 @@ withLineBreaks = concat . intersperse "\n"
 
 getFuncFrameSize :: IStmt -> Int
 getFuncFrameSize (ICompoundStmt decls stmts)
-  = minimum $ (map getFpAddr decls) ++ (map getFuncFrameSize stmts)
+  = safeMinimum $ (map getFpAddr decls) ++ (map getFuncFrameSize stmts)
 getFuncFrameSize (IIfStmt _ true false)
-  = minimum $ map getFuncFrameSize (true ++ false)
+  = safeMinimum $ map getFuncFrameSize (true ++ false)
 getFuncFrameSize (IWhileStmt _ body)
-  = minimum $ map getFuncFrameSize body
+  = safeMinimum $ map getFuncFrameSize body
 getFuncFrameSize _ = 0
 
+safeMinimum :: [Int] -> Int
+safeMinimum []  = 0
+safeMinimum [x] = x
+safeMinimum (x:xs)
+    | x < minTail = x
+    | otherwise = minTail
+    where minTail = safeMinimum xs
 
 setStackPointer :: Int -> LabelEnv ()
 setStackPointer size = do
