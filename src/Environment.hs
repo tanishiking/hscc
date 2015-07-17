@@ -86,6 +86,10 @@ collectExternalDecl (FuncDef pos ty name args stmt)
                                                       ,": invalid declaration "
                                                       , name, ": function "
                                                       , name, " is already declared"]
+                     (Var, _, _)    -> error $ concat [show pos
+                                                      ,": invalid declaration "
+                                                      ,name , ": variable "
+                                                      ,name, "is already declared"]
                      _              -> appendEnv globalLevel funcInfo
       --Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
       Nothing -> appendEnv globalLevel funcInfo
