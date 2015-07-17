@@ -108,10 +108,11 @@ appendWithDupCheck pos lev info =
   let name = fst info in do
     maybeInfo <- find lev name
     case maybeInfo of
-      (Just mInfo) -> if (getLevel . snd $ mInfo) == paramLevel
-                      then (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv bodyLevel info
-                      --else error $ concat [show pos, "duplicate variable: ", show name]
-                      else appendEnv lev info
+      (Just mInfo) -> if (getLevel . snd $ mInfo) /= lev
+                      then if (lev /= paramLevel) 
+                           then appendEnv lev info
+                           else (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv lev info
+                      else error $ concat [show pos, " duplicate declaration :", show name, " :", show name, "is already declared"]
       Nothing  -> appendEnv lev info
 
 
