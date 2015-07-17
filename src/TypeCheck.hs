@@ -44,7 +44,7 @@ stmtTypeCheck info (CheckedIfStmt pos cond true false) =
   let eitherExprTy = exprTypeCheck cond in
   case eitherExprTy of
     (Left err)     -> fail err
-    (Right expTy) -> if expTy /= ChInt
+    (Right expTy) -> if (expTy /= ChInt)
                      then fail $ concat [show pos, "invalid expression", show cond, " - it must be int"]
                      else liftM2 max trueTy falseTy
                      where trueTy  = stmtTypeCheck info true 
@@ -103,7 +103,11 @@ exprTypeCheck (CheckedCallFunc pos funcInfo args) = do
   case (snd $ funcInfo) of
     (Func, ChFunc ty paramTypes, _) -> if argTypes == paramTypes
                                           then return ty
-                                          else fail $ concat [show pos, "type mismatch in func params\n  Expected: ", show paramTypes, "\n  Actual: ", show argTypes]
+                                          else fail $ concat [show pos
+                                                             ,"type mismatch in func params\n  Expected: "
+                                                             ,show paramTypes, "\n  Actual: ", show argTypes]
+    _                               -> fail $ concat ["invalid call function: "
+                                                     ,show $ fst funcInfo, " is not function"]
 exprTypeCheck (CheckedExprList _ exprs)           = liftM typeLast (mapM exprTypeCheck exprs)
 exprTypeCheck (CheckedConstant _ _)               = return ChInt
 exprTypeCheck (CheckedIdentExpr _ (_, info))      = return $ getType info
@@ -161,4 +165,5 @@ checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form"]
 
 checkAddressRefer :: SourcePos -> CheckedExpr -> Either String ()
 checkAddressRefer _ (CheckedIdentExpr _ _) = return ()
+checkAddressRefer _ (CheckedUnaryPointer _ _) = return ()
 checkAddressRefer pos _ = fail $ concat [show pos, "invalid operand &: it must be used for Identifier"]

@@ -80,8 +80,11 @@ collectExternalDecl (FuncDef pos ty name args stmt)
       (Just info) -> case info of
                      (FProt, ty, _) -> if ty == (getType . snd $ funcInfo)
                                           then appendEnv globalLevel funcInfo
-                                          else error $ concat [show pos, ": invalid decl,", name]
-                     (Func, _, _)   -> error $ concat [show pos, ": invalid decl,", name]
+                                          else error $ concat [show pos, ": invalid declaration: ", name]
+                     (Func, _, _)   -> error $ concat [show pos
+                                                      ,": invalid declaration "
+                                                      , name, ": function "
+                                                      , name, " is already declared"]
                      _              -> appendEnv globalLevel funcInfo
       --Nothing  -> error $ concat [show pos, "you cannot call function without prototype declaration: ", name] 
       Nothing -> appendEnv globalLevel funcInfo
