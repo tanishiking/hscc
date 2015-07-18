@@ -43,6 +43,7 @@ executable HasC
     build-depends:       base >=4 && <5,
                          parsec == 3.1.9,
                          containers == 0.5.6.2,
-                         mtl == 2.2.1
-    hs-source-dirs:      src
+                         mtl == 2.2.1,
+                         HasC
+    hs-source-dirs:      src-exec
     default-language:    Haskell2010
