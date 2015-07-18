@@ -3,3 +3,7 @@
 Main
 *.out
 final
+.cabal-sandbox
+cabal.sandbox.config
+dist
+src/.cabal-sandbox
