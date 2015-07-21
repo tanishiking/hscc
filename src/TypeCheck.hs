@@ -32,7 +32,7 @@ eDeclTypeCheck (CheckedFuncDef pos (fname, finfo) _ stmt) =
                               then return () 
                               else fail $ concat [show pos, " invalid type error: \n  Expected:"
                                                  ,show expType, "\n  Actual:", show actType]
-      Nothing   -> fail $ concat [show pos, " invalid function return type", show (getType finfo)]
+      Nothing   -> fail $ concat [show pos, " invalid function return type ", show (getType finfo)]
 
 
 typeMaximum :: [ChType] -> ChType
@@ -55,7 +55,7 @@ stmtTypeCheck info (CheckedIfStmt pos cond true false) =
   case eitherExprTy of
     (Left err)     -> fail err
     (Right expTy) -> if (expTy /= ChInt)
-                     then fail $ concat [show pos, "invalid expression", show cond, " - it must be int"]
+                     then fail $ concat [show pos, "invalid expression ", show cond, " - it must be int"]
                      else liftM2 max trueTy falseTy
                      where trueTy  = stmtTypeCheck info true 
                            falseTy = stmtTypeCheck info false
@@ -163,11 +163,11 @@ checkAddSub pos e1 e2 = do
 checkAssignForm :: SourcePos -> CheckedExpr -> Either String ()
 checkAssignForm pos (CheckedIdentExpr _ (name, (kind, ty, _))) =
   case (kind, ty) of
-    (Var, (ChArray _ _ ))   -> fail $ concat [show pos, "invalid assignment to: ", show name] 
+    (Var, (ChArray _ _ ))   -> fail $ concat [show pos, "invalid assignment to: ", name] 
     (Var, _)                -> return ()
-    (Func, _)               -> fail $ concat [show pos, "invalid assignment to: ", show name] 
-    (FProt, _)              -> fail $ concat [show pos, "invalid assignment to: ", show name] 
-    (Param, (ChArray _ _ )) -> fail $ concat [show pos, "invalid assignment to: ", show name] 
+    (Func, _)               -> fail $ concat [show pos, "invalid assignment to: ", name] 
+    (FProt, _)              -> fail $ concat [show pos, "invalid assignment to: ", name] 
+    (Param, (ChArray _ _ )) -> fail $ concat [show pos, "invalid assignment to: ", name] 
     (Param, _)              -> return ()
 checkAssignForm _ (CheckedUnaryPointer _ _) = return ()
 checkAssignForm pos _ = fail $ concat [show pos, " invalid assign form : "

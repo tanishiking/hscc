@@ -154,8 +154,8 @@ checkExpr _ (Constant pos num) = return $ CheckedConstant pos num
 checkExpr lev (IdentExpr pos name) = do
   info <- findOrErr pos lev name
   case info of
-    (_, (Func, _, _))  -> error $ concat [show pos, "invalid reference to function: ", show name]
-    (_, (FProt, _, _)) -> error $ concat [show pos, "invalid reference to function prototype: ", show name]
+    (_, (Func, _, _))  -> error $ concat [show pos, "invalid reference to function: ", name]
+    (_, (FProt, _, _)) -> error $ concat [show pos, "invalid reference to function prototype: ", name]
     varInfo            -> return $ CheckedIdentExpr pos varInfo
 
 

@@ -24,7 +24,14 @@ data ChType = ChVoid
             | ChArray   ChType Integer
             | ChFunc    ChType [ChType]
             | ChTmp
-           deriving (Show, Ord)
+           deriving (Ord)
+
+instance Show ChType where
+  show (ChVoid) = "void"
+  show (ChInt)  = "int"
+  show (ChPointer ty) = "*" ++ show ty
+  show (ChArray ty _)  = "[" ++ show ty ++ "]"
+  show _        = ""
 
 instance Eq ChType where
   (==) ChVoid             ChVoid             = True
@@ -111,8 +118,8 @@ appendWithDupCheck pos lev info =
       (Just mInfo) -> if (getLevel . snd $ mInfo) /= lev
                       then if (lev /= paramLevel) 
                            then appendEnv lev info
-                           else (tell $ [concat [show pos, "warning: the variable,", show name, "is already declared in parameter"]]) >> appendEnv lev info
-                      else error $ concat [show pos, " duplicate declaration :", show name, " :", show name, "is already declared"]
+                           else (tell $ [concat [show pos, "warning: the variable,", name, " is already declared in parameter"]]) >> appendEnv lev info
+                      else error $ concat [show pos, " duplicate declaration :", name, " :", name, " is already declared"]
       Nothing  -> appendEnv lev info
 
 
@@ -138,7 +145,7 @@ makeParamInfo :: SourcePos -> (Type, Identifier) -> Info
 makeParamInfo pos (ty, name)
   = let cty = convType ty in
     if containVoid cty 
-    then error $ concat [show pos, "invalid argument: ", show name, "it's void type"]
+    then error $ concat [show pos, " invalid argument: ", name, " it's void type"]
     else (name, (Param, cty, paramLevel))
 
 

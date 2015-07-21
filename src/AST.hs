@@ -19,8 +19,8 @@ data DirectDeclarator = Variable SourcePos Identifier
                       | Sequence SourcePos Identifier Integer
 
 instance Show DirectDeclarator where
-  show (Variable _ ident)     = show ident
-  show (Sequence _ ident int) = concat [show ident, "[", show int, "]"]
+  show (Variable _ ident)     = ident
+  show (Sequence _ ident int) = concat [ident, "[", show int, "]"]
 
 {-===============
  -    Type

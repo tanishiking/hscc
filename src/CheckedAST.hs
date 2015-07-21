@@ -38,4 +38,24 @@ data CheckedExpr = CheckedAssignExpr   SourcePos CheckedExpr CheckedExpr
                  | CheckedExprList     SourcePos [CheckedExpr]
                  | CheckedConstant     SourcePos Integer
                  | CheckedIdentExpr    SourcePos Info
-                 deriving (Show)
+
+instance Show CheckedExpr where
+  show (CheckedAssignExpr _ e1 e2)  = show e1 ++ " = "  ++ show e2
+  show (CheckedOr _ e1 e2)      = show e1 ++ " || " ++ show e2
+  show (CheckedAnd _ e1 e2)     = show e1 ++ " && " ++ show e2
+  show (CheckedEqual _ e1 e2) = show e1 ++ " == " ++ show e2
+  show (CheckedNotEqual _ e1 e2) = show e1 ++ " != " ++ show e2
+  show (CheckedLt _ e1 e2) = show e1 ++ " < " ++ show e2
+  show (CheckedGt _ e1 e2) = show e1 ++ " > " ++ show e2
+  show (CheckedLte _ e1 e2) = show e1 ++ " <= " ++ show e2
+  show (CheckedGte _ e1 e2) = show e1 ++ " >= " ++ show e2
+  show (CheckedPlus _ e1 e2) = show e1 ++ " + " ++ show e2
+  show (CheckedMinus _ e1 e2) = show e1 ++ " - " ++ show e2
+  show (CheckedMultiple _ e1 e2) = show e1 ++ " * " ++ show e2
+  show (CheckedDivide _ e1 e2) = show e1 ++ " / " ++ show e2
+  show (CheckedUnaryAddress _ expr) = show expr
+  show (CheckedUnaryPointer _ expr) = show expr
+  show (CheckedCallFunc _ info _) = fst info
+  show (CheckedExprList _ exprs)  = show exprs
+  show (CheckedConstant _ num)    = show num
+  show (CheckedIdentExpr _ info)  = fst info

@@ -26,7 +26,7 @@ data IVar = VarInfo Info
           deriving (Eq)
 
 instance Show IVar where
-  show (VarInfo info) = show info
+  show (VarInfo info) = fst info
   show (VarAddr addr) = show addr
 
 data IExDecl = IDecl    [IVar]
