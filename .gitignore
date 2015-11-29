@@ -7,3 +7,5 @@ final
 cabal.sandbox.config
 dist
 src/.cabal-sandbox
+.stack-work
+*.zip
