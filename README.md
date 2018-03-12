@@ -31,7 +31,7 @@ void main() {
 }
 ```
 
-`stack exec hscc fib.sc` print the following mips program
+`stack exec hscc fib.sc` write the following MIPS code to stdout
 ```
     .text
     .globl main
